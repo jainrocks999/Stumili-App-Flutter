@@ -116,8 +116,7 @@ class _SavePlaylistScreenState extends State<SavePlaylistScreen> {
 
       if (!mounted) return;
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+      ScaffoldMessenger.of(context).showSnackBar( const SnackBar(
           content: Text("Playlist created successfully"),
           backgroundColor: Colors.green,
         ),
