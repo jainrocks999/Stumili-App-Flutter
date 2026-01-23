@@ -5,18 +5,37 @@ import 'package:flutter_tts/flutter_tts.dart';
 import 'package:just_audio/just_audio.dart' as ja;
 
 import 'player_state.dart';
+enum PlayerTab { voice, time, music }
 
 class PlayerController extends ChangeNotifier {
   final List affirmations;
+   PlayerTab selectedTab = PlayerTab.voice;
   int maxTimeMinutes = 1; // 1 / 5 / 10
   int _elapsedSeconds = 0;
   Timer? _sessionTimer;
+  double ttsVolume = 1.0;
+  double bgVolume = 0.35;
+  
+   void selectTab(PlayerTab tab) {
+    selectedTab = tab;
+    notifyListeners();
+  }
 
   final PageController pageController = PageController();
   final FlutterTts tts = FlutterTts();
   final ja.AudioPlayer bgPlayer = ja.AudioPlayer();
 
-  // Timer? _timer;
+  void setTtsVolume(double v) {
+    ttsVolume = v;
+    tts.setVolume(v);
+    notifyListeners();
+  }
+
+   void setBgVolume(double v) {
+    bgVolume = v;
+    bgPlayer.setVolume(v);
+    notifyListeners();
+  }
 
   PlayerState _state = PlayerState.initial;
   PlayerState get state => _state;
@@ -25,7 +44,7 @@ class PlayerController extends ChangeNotifier {
     _init();
   }
 
-  // ---------------- INIT ----------------
+
   Future<void> _init() async {
     // -------- Background Music --------
     await bgPlayer.setAsset('assets/sound/affirmation.mp3');

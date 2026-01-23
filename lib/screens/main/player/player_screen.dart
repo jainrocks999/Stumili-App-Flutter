@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:weather_app/screens/main/player/tabs/music_tab.dart';
+import 'package:weather_app/screens/main/player/tabs/time_tab.dart';
+import 'package:weather_app/screens/main/player/tabs/voice_tab.dart';
 import 'player_controller.dart';
 
 class PlayerScreen extends StatelessWidget {
@@ -16,6 +19,17 @@ class PlayerScreen extends StatelessWidget {
       child: const _PlayerView(),
     );
   }
+}
+
+void _openSettings(BuildContext context) {
+  showModalBottomSheet(
+    context: context,
+    isScrollControlled: true,
+    backgroundColor: Colors.transparent,
+    builder: (_) {
+      return const _SettingsSheet();
+    },
+  );
 }
 
 class _PlayerView extends StatelessWidget {
@@ -88,7 +102,6 @@ class _PlayerView extends StatelessWidget {
 
                 const Spacer(),
 
-  
                 SizedBox(
                   height: size.height * 0.45,
                   child: PageView.builder(
@@ -183,14 +196,7 @@ class _PlayerView extends StatelessWidget {
                 /// Bottom Tabs
                 Padding(
                   padding: const EdgeInsets.only(bottom: 16),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: const [
-                      _BottomTab(title: 'Voice'),
-                      _BottomTab(title: 'Time'),
-                      _BottomTab(title: 'Music'),
-                    ],
-                  ),
+                  child: const PlayerBottomTabs(),
                 ),
               ],
             ),
@@ -201,23 +207,90 @@ class _PlayerView extends StatelessWidget {
   }
 }
 
-class _BottomTab extends StatelessWidget {
-  final String title;
-  const _BottomTab({required this.title});
+class PlayerBottomTabs extends StatelessWidget {
+  const PlayerBottomTabs({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final controller = context.watch<PlayerController>();
+
+    Widget tab(PlayerTab tab, String title, String img) {
+      final isActive = controller.selectedTab == tab;
+
+      return GestureDetector(
+        onTap: () {
+          controller.selectTab(tab);
+         
+        },
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 250),
+          height: 45,
+          width: isActive ? 130 : 110,
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          decoration: BoxDecoration(
+            color: isActive ? Colors.black : Colors.grey.shade300,
+            borderRadius: BorderRadius.circular(30),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                title,
+                style: TextStyle(color: isActive ? Colors.white : Colors.black),
+              ),
+              CircleAvatar(radius: 18, backgroundImage: AssetImage(img)),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      children: [
+        tab(PlayerTab.voice, 'Voice', 'assets/profilepic/profile2.jpg'),
+        tab(PlayerTab.time, 'Time', 'assets/images/timer.jpg'),
+        tab(PlayerTab.music, 'Music', 'assets/images/music1.jpg'),
+      ],
+    );
+  }
+}
+
+class _SettingsSheet extends StatelessWidget {
+  const _SettingsSheet();
+
+  @override
+  Widget build(BuildContext context) {
+    final controller = context.watch<PlayerController>();
+
     return Container(
-      height: 45,
-      width: 110,
-      padding: const EdgeInsets.symmetric(horizontal: 12),
-      decoration: BoxDecoration(
-        color: Colors.grey.shade300,
-        borderRadius: BorderRadius.circular(30),
+      height: MediaQuery.of(context).size.height * 0.65,
+      decoration: const BoxDecoration(
+        color: Color(0xFF191919),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
       ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: const [Text(''), CircleAvatar(radius: 18)],
+      child: Column(
+        children: [
+          const SizedBox(height: 12),
+
+          const PlayerBottomTabs(),
+          const SizedBox(height: 20),
+
+          Expanded(
+            child: Builder(
+              builder: (_) {
+                switch (controller.selectedTab) {
+                  case PlayerTab.voice:
+                    return const VoiceTab();
+                  case PlayerTab.time:
+                    return const TimeTab();
+                  case PlayerTab.music:
+                    return const MusicTab();
+                }
+              },
+            ),
+          ),
+        ],
       ),
     );
   }
