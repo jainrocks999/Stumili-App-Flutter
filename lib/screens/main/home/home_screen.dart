@@ -161,7 +161,6 @@ void hideLoader(BuildContext context) {
         },
       );
       final data = response.data['data'];
-      debugPrint("responsed data $data,");
       if (!mounted) return;
        hideLoader(context);
       Navigator.pushNamed(

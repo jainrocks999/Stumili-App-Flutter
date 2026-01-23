@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:weather_app/core/secure_storage.dart';
 import 'package:weather_app/screens/main/user_plalist/affirmation_menu.dart';
+import 'package:weather_app/screens/main/user_plalist/create_edit_playlist_screen.dart';
 import 'package:weather_app/services/api_service.dart';
 
 class EditPlaylistScreen extends StatefulWidget {
@@ -92,7 +93,7 @@ class _EditPlaylistScreenState extends State<EditPlaylistScreen> {
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
       builder: (_) {
-        return AffirmationMenuModal(
+        return AffirmationListModal(
           affirmations: allAffirmations,
           onSelect: (item) {
             toggleAffirmation(item); // selected list me add
@@ -122,28 +123,29 @@ class _EditPlaylistScreenState extends State<EditPlaylistScreen> {
     setState(() => loading = true);
 
     try {
-      final token = await SecureStore.getToken();
       final userId = await SecureStore.getUserId();
 
       final Map<String, dynamic> payload = {
         "user_id": userId,
         "playlist_id": widget.item['id'],
       };
-
-      for (int i = 0; i < selected.length; i++) {
-        payload["affirmation_text_id[$i]"] = selected[i]['id'];
+      if (selected.isEmpty) {
+        payload['affirmation_text_id[1]'] = null;
+      } else {
+        for (int i = 0; i < selected.length; i++) {
+          payload["affirmation_text_id[$i]"] = selected[i]['id'];
+        }
       }
-      await ApiService.postWithToken(
-        "/deletePlayListItem",
-        token: token,
-        body: payload,
-      );
+      await ApiService.postRequest("/deletePlayListItem", body: payload);
 
       Fluttertoast.showToast(msg: "Playlist Updated");
       if (!mounted) {
         return;
       }
-      Navigator.pop(context);
+      Navigator.pop(context, {
+        "updated": true,
+        "affirmations": selected, // 👈 updated list
+      });
     } catch (e) {
       debugPrint("errrrrr$e");
       Fluttertoast.showToast(
@@ -236,49 +238,63 @@ class _EditPlaylistScreenState extends State<EditPlaylistScreen> {
   }
 
   Widget _playlistCard() {
-    return Container(
-      margin: const EdgeInsets.all(16),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: const Color(0xFF4A4949),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        children: [
-          Container(
-            height: 70,
-            width: 70,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(10),
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => SavePlaylistScreen(
+              isEdit: true,
+              selectedIds: [],
+              editedItem: widget.item,
             ),
-            child: const Icon(Icons.queue_music, color: Color(0xFFB72658)),
           ),
-          const SizedBox(width: 12),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                widget.item['title'],
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                ),
+        );
+      },
+      child: Container(
+        margin: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: const Color(0xFF4A4949),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          children: [
+            Container(
+              height: 70,
+              width: 70,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(10),
               ),
-              const SizedBox(height: 6),
-              const Row(
-                children: [
-                  Icon(Icons.edit, color: Colors.white, size: 16),
-                  SizedBox(width: 6),
-                  Text(
-                    "Edit Name and info",
-                    style: TextStyle(color: Colors.white70),
+              child: const Icon(Icons.queue_music, color: Color(0xFFB72658)),
+            ),
+            const SizedBox(width: 12),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  widget.item['title'],
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
                   ),
-                ],
-              ),
-            ],
-          ),
-        ],
+                ),
+                const SizedBox(height: 6),
+                const Row(
+                  children: [
+                    Icon(Icons.edit, color: Colors.white, size: 16),
+                    SizedBox(width: 6),
+                    Text(
+                      "Edit Name and info",
+                      style: TextStyle(color: Colors.white70),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }

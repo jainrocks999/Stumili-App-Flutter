@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'player_controller.dart';
@@ -33,16 +32,14 @@ class _PlayerView extends StatelessWidget {
         children: [
           /// Background Image
           Positioned.fill(
-            child: Image.asset(
-              'assets/images/music.jpg',
-              fit: BoxFit.cover,
-            ),
+            child: Image.asset('assets/images/music.jpg', fit: BoxFit.cover),
           ),
 
           /// Dark Overlay
           Positioned.fill(
-           child: Container(color: Colors.black.withAlpha((0.93 * 255).round())),
-
+            child: Container(
+              color: Colors.black.withAlpha((0.93 * 255).round()),
+            ),
           ),
 
           SafeArea(
@@ -83,8 +80,7 @@ class _PlayerView extends StatelessWidget {
                       ),
                       CircleAvatar(
                         radius: 22,
-                        backgroundImage:
-                            AssetImage('assets/images/music.jpg'),
+                        backgroundImage: AssetImage('assets/images/music.jpg'),
                       ),
                     ],
                   ),
@@ -92,7 +88,7 @@ class _PlayerView extends StatelessWidget {
 
                 const Spacer(),
 
-                /// PageView (RN FlatList pagingEnabled)
+  
                 SizedBox(
                   height: size.height * 0.45,
                   child: PageView.builder(
@@ -132,8 +128,8 @@ class _PlayerView extends StatelessWidget {
                               true
                           ? Icons.favorite
                           : Icons.favorite_border,
-                      color: controller.affirmations[state.index]
-                                  ['is_favorite'] ==
+                      color:
+                          controller.affirmations[state.index]['is_favorite'] ==
                               true
                           ? Colors.pink
                           : Colors.white,
@@ -149,8 +145,7 @@ class _PlayerView extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(width: 40),
-                    const Icon(Icons.more_horiz,
-                        color: Colors.white, size: 30),
+                    const Icon(Icons.more_horiz, color: Colors.white, size: 30),
                   ],
                 ),
 
@@ -175,9 +170,7 @@ class _PlayerView extends StatelessWidget {
                         ),
                       ),
                       Icon(
-                        state.isPaused
-                            ? Icons.play_arrow
-                            : Icons.pause,
+                        state.isPaused ? Icons.play_arrow : Icons.pause,
                         color: Colors.white,
                         size: 40,
                       ),
@@ -224,10 +217,7 @@ class _BottomTab extends StatelessWidget {
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: const [
-          Text(''),
-          CircleAvatar(radius: 18),
-        ],
+        children: const [Text(''), CircleAvatar(radius: 18)],
       ),
     );
   }

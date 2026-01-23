@@ -27,15 +27,11 @@ class _LibraryScreenState extends State<LibraryScreen> {
     fetchAll();
   }
 
-  /* ------------------------------- INIT LOAD ------------------------------- */
-
   Future<void> fetchAll() async {
     setState(() => loading = true);
     await Future.wait([getCategories(), getPlaylists()]);
     setState(() => loading = false);
   }
-
-  /* --------------------------------- APIs ---------------------------------- */
 
   Future<void> getCategories() async {
     final token = await SecureStore.getToken();
@@ -134,17 +130,17 @@ class _LibraryScreenState extends State<LibraryScreen> {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (_) => EditPlaylistScreen(
-                item: item,
-                affirmations: playlistItems,
-              
-              ),
+              builder: (_) =>
+                  EditPlaylistScreen(item: item, affirmations: playlistItems),
             ),
           );
         } else {
+          if (playlistItems.isEmpty) {
+            Fluttertoast.showToast(msg: "Playlist is empty");
+            return;
+          }
           Navigator.pushNamed(
             context,
-
             AppRoutes.playlistdailts,
             arguments: {
               "category": {
@@ -153,7 +149,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
                 "caetgory_images": null,
               },
               "affirmation": playlistItems,
-              "isEdit": isEdit,
+              "isDefault": true,
             },
           );
         }
@@ -208,12 +204,34 @@ class _LibraryScreenState extends State<LibraryScreen> {
   Future<void> openLikedAffirmations() async {
     final token = await SecureStore.getToken();
     final userId = await SecureStore.getUserId();
+    try {
+      final response = await ApiService.getWithToken(
+        "/likeAffirmations",
+        token: token,
+        queryParameters: {"user_id": userId},
+      );
 
-    await ApiService.getWithToken(
-      "/likeAffirmations",
-      token: token,
-      queryParameters: {"user_id": userId},
-    );
+      final data = response.data["data"];
+    if (mounted && data != null && data is List && data.isNotEmpty)  {
+        Navigator.pushNamed(
+          context,
+          AppRoutes.playlistdailts,
+          arguments: {
+            "category": {
+              "categories_name": "Liked Affirmations",
+              "caetgory_images": null,
+            },
+            "affirmation": data,
+            "isDefault": true,
+          },
+        );
+      }else{
+          Fluttertoast.showToast(msg: "No Liked affirmation!");
+      }
+    } catch (errr) {
+  
+      Fluttertoast.showToast(msg: "Something went wrong");
+    }
   }
 
   /* ---------------------------------- UI ----------------------------------- */

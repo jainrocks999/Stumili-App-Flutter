@@ -5,6 +5,8 @@ class PlaylistTile extends StatelessWidget {
   final String subtitle;
   final VoidCallback onMore;
   final VoidCallback onTap;
+  final bool isSelected;
+  final bool isAddPlaylist;
 
   const PlaylistTile({
     super.key,
@@ -12,6 +14,8 @@ class PlaylistTile extends StatelessWidget {
     required this.subtitle,
     required this.onMore,
     required this.onTap,
+    this.isSelected = false,
+    this.isAddPlaylist = false,
   });
 
   @override
@@ -40,8 +44,13 @@ class PlaylistTile extends StatelessWidget {
         style: const TextStyle(color: Colors.white60),
       ),
       trailing: IconButton(
-        icon: const Icon(Icons.more_horiz, color: Colors.white),
-        onPressed: onMore, // 🔥 OPEN MENU
+        icon: Icon(
+          isAddPlaylist
+              ? (isSelected ? Icons.check_circle : Icons.circle_outlined)
+              : Icons.more_horiz,
+          color: isSelected?Color(0xFFB72658): Colors.white,
+        ),
+        onPressed: onMore,
       ),
     );
   }

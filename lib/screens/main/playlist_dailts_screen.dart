@@ -1,9 +1,9 @@
-// ignore_for_file: use_build_context_synchronously
-
 import 'package:flutter/material.dart';
 import 'package:weather_app/core/helper.dart';
 import 'package:weather_app/core/playlist_action_handler.dart';
 import 'package:weather_app/navigation/routes/app_routes.dart';
+import 'package:weather_app/screens/main/user_plalist/edit_playlist_screen.dart';
+import 'package:weather_app/widgets/affirmation_menu_modal.dart';
 import 'package:weather_app/widgets/custom_button.dart';
 
 class PlaylistDailtsScreen extends StatefulWidget {
@@ -33,6 +33,7 @@ class _PlaylistDailtsScreenState extends State<PlaylistDailtsScreen> {
         ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
     final affirmations = args['affirmation'];
     final category = args['category'];
+    final isDefault = args['isDefault']??false;
     final String title = category["categories_name"] ?? "Believe in Yourself";
     final String imageUrl =
         category["caetgory_images"] ??
@@ -121,28 +122,29 @@ class _PlaylistDailtsScreenState extends State<PlaylistDailtsScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      IconButton(
-                        icon: Icon(
-                          isFavorite ? Icons.favorite : Icons.favorite_border,
-                          color: isFavorite
-                              ? const Color(0xFFB72658)
-                              : Colors.white,
+                      if (!isDefault)
+                        IconButton(
+                          icon: Icon(
+                            isFavorite ? Icons.favorite : Icons.favorite_border,
+                            color: isFavorite
+                                ? const Color(0xFFB72658)
+                                : Colors.white,
+                          ),
+                          onPressed: () async {
+                            final newValue = await CommonHelper.toggleFavorite(
+                              item: category,
+                              currentValue: isFavorite,
+                            );
+
+                            if (!mounted) return;
+
+                            setState(() {
+                              isFavorite = newValue;
+                              category['is_favorite'] =
+                                  newValue; // 🔥 shared state
+                            });
+                          },
                         ),
-                        onPressed: () async {
-                          final newValue = await CommonHelper.toggleFavorite(
-                            item: category,
-                            currentValue: isFavorite,
-                          );
-
-                          if (!mounted) return;
-
-                          setState(() {
-                            isFavorite = newValue;
-                            category['is_favorite'] =
-                                newValue; // 🔥 shared state
-                          });
-                        },
-                      ),
                       const SizedBox(width: 20),
                       IconButton(
                         icon: const Icon(Icons.share, color: Colors.white),
@@ -156,6 +158,7 @@ class _PlaylistDailtsScreenState extends State<PlaylistDailtsScreen> {
                               await PlaylistActionHandler.openActionModal(
                                 context: context,
                                 item: category,
+                                affirmations: affirmations,
                               );
 
                           if (!mounted || result == null) return;
@@ -168,10 +171,42 @@ class _PlaylistDailtsScreenState extends State<PlaylistDailtsScreen> {
                           }
 
                           if (result['action'] == 'delete') {
-                            if(!mounted){
+                            if (!mounted) {
                               return;
                             }
                             Navigator.pop(context);
+                          }
+                          if (result['action'] == 'play') {
+                            if (!mounted) {
+                              return;
+                            }
+                            Navigator.pushNamed(
+                              context,
+                              AppRoutes.player,
+                              arguments: {"affirmations": affirmations},
+                            );
+                          }
+                          if (result['action'] == 'edit_playlist') {
+                            if (!mounted) {
+                              return;
+                            }
+                            final result = await Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => EditPlaylistScreen(
+                                  item: category,
+                                  affirmations: affirmations,
+                                ),
+                              ),
+                            );
+                            if (!mounted || result == null) return;
+
+                            if (result['updated'] == true) {
+                              setState(() {
+                                affirmations.clear();
+                                affirmations.addAll(result['affirmations']);
+                              });
+                            }
                           }
                         },
                       ),
@@ -213,7 +248,32 @@ class _PlaylistDailtsScreenState extends State<PlaylistDailtsScreen> {
                             Icons.more_horiz,
                             color: Colors.white,
                           ),
-                          onPressed: () {},
+                          onPressed: () {
+                            showModalBottomSheet(
+                              context: context,
+                              backgroundColor: Colors.transparent,
+                              isScrollControlled: true,
+                              builder: (_) {
+                                return AffirmationMenuModal(
+                                  affirmation: item,
+                                  loading: false,
+                                  onClose: () => Navigator.pop(context),
+                                  onFavoriteChanged: (isFav) async {
+                                    final newValue =
+                                        await CommonHelper.toggleFavorite(
+                                          item: item,
+                                          currentValue: isFav,
+                                          isAffimation: true,
+                                        );
+
+                                    setState(() {
+                                      item['is_favorite'] = newValue;
+                                    });
+                                  },
+                                );
+                              },
+                            );
+                          },
                         ),
                       ],
                     ),

@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/widgets.dart';
 import 'package:weather_app/core/app_constants.dart';
 
 class ApiService {
@@ -36,7 +37,7 @@ class ApiService {
     } else {
       data = body;
     }
-
+debugPrint("ttttt$data");
     return await dio.post(
       endpoint,
       data: data,

@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 
-class AffirmationMenuModal extends StatefulWidget {
+class AffirmationListModal extends StatefulWidget {
   final List<Map<String, dynamic>> affirmations;
   final VoidCallback onClose;
   final Function(Map<String, dynamic>) onSelect;
 
-  const AffirmationMenuModal({
+  const AffirmationListModal({
     super.key,
     required this.affirmations,
     required this.onClose,
@@ -13,10 +13,10 @@ class AffirmationMenuModal extends StatefulWidget {
   });
 
   @override
-  State<AffirmationMenuModal> createState() => _AffirmationMenuModalState();
+  State<AffirmationListModal> createState() => _AffirmationListModalState();
 }
 
-class _AffirmationMenuModalState extends State<AffirmationMenuModal> {
+class _AffirmationListModalState extends State<AffirmationListModal> {
   late List<Map<String, dynamic>> _list;
 
   @override

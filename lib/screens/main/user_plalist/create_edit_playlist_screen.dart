@@ -94,7 +94,7 @@ class _SavePlaylistScreenState extends State<SavePlaylistScreen> {
           body: payload,
         );
       } else {
-        payload["playlist_id"] = widget.editedItem!['id'];
+        payload["playlist_id"] = widget.editedItem!['id'].toString();
         playlistResponse = await ApiService.postRequest(
           "/updatePlayList",
           body: payload,
@@ -106,10 +106,10 @@ class _SavePlaylistScreenState extends State<SavePlaylistScreen> {
       final int playlistId = playlistResponse.data['data']['id'];
       final selectedIds = widget.selectedIds;
 
-      if (selectedIds.isNotEmpty) {
+      if (selectedIds.isNotEmpty&&widget.isEdit) {
         await ApiService.postRequest(
           "/createPlayListItem",
-          body: {"playlist_id": playlistId, "affirmation_text_id": selectedIds},
+          body: {"playlist_id": playlistId.toString(), "affirmation_text_id": selectedIds},
           contentType: "application/json",
         );
       }

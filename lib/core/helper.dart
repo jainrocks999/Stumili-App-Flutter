@@ -7,6 +7,7 @@ class CommonHelper {
   static Future<bool> toggleFavorite({
     required Map<String, dynamic> item,
     required bool currentValue,
+    bool isAffimation = false,
   }) async {
     try {
       final token = await SecureStore.getToken();
@@ -17,18 +18,18 @@ class CommonHelper {
       }
 
       final bool isPlaylist = item.containsKey('title');
+      final payload = {
+        'user_id': userId,
+        if (!isPlaylist && !isAffimation) 'category_id': item['id'],
+        if (isAffimation) "affirmation_text_id": item["id"],
+      };
 
       if (!currentValue) {
         await ApiService.postWithToken(
           '/createFavoriteList',
-          body: {
-            'user_id': userId,
-            if (isPlaylist) 'playlist_id': item['id'],
-            if (!isPlaylist) 'category_id': item['id'],
-          },
+          body: payload,
           token: token,
         );
-
         Fluttertoast.showToast(msg: "Added to favorites");
         return true;
       } else {
@@ -36,8 +37,8 @@ class CommonHelper {
           '/removeFavoriteList',
           queryParameters: {
             'user_id': userId,
-            if (isPlaylist) 'playlist_id': item['id'],
-            if (!isPlaylist) 'category_id': item['id'],
+            if (isAffimation) "affirmation_text_id": item["id"],
+            if (!isPlaylist && !isAffimation) 'category_id': item['id'],
           },
           token: token,
         );
