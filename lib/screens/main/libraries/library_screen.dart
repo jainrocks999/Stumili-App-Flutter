@@ -5,6 +5,7 @@ import 'package:weather_app/navigation/routes/app_routes.dart';
 import 'package:weather_app/screens/main/libraries/category_menu_modal.dart';
 import 'package:weather_app/screens/main/libraries/category_tile.dart';
 import 'package:weather_app/screens/main/libraries/playlist_tile.dart';
+import 'package:weather_app/screens/main/player/mini_player_bar.dart';
 import 'package:weather_app/screens/main/user_plalist/edit_playlist_screen.dart';
 import 'package:weather_app/services/api_service.dart';
 
@@ -240,6 +241,11 @@ class _LibraryScreenState extends State<LibraryScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFF191919),
+      bottomNavigationBar: MiniPlayerBar(
+        onTapOpenPlayer: () {
+          Navigator.pushNamed(context, AppRoutes.player);
+        },
+      ),
       body: Stack(
         children: [
           _body(),

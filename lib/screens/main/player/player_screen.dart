@@ -1,67 +1,66 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:weather_app/screens/main/player/tabs/music_tab.dart';
-import 'package:weather_app/screens/main/player/tabs/time_tab.dart';
-import 'package:weather_app/screens/main/player/tabs/voice_tab.dart';
-import 'player_controller.dart';
+import 'package:weather_app/screens/main/player/settings_sheet.dart';
 
-class PlayerScreen extends StatelessWidget {
+import 'player_controller.dart';
+import 'player_state.dart';
+
+class PlayerScreen extends StatefulWidget {
   const PlayerScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  State<PlayerScreen> createState() => _PlayerScreenState();
+}
+
+class _PlayerScreenState extends State<PlayerScreen> {
+  bool _started = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_started) return;
+    _started = true;
+
     final args =
-        ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
-    final affirmations = args['affirmations'] as List;
+        (ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?) ??
+            {};
+    final list = (args['affirmations'] as List?) ?? [];
 
-    return ChangeNotifierProvider(
-      create: (_) => PlayerController(affirmations),
-      child: const _PlayerView(),
-    );
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final c = context.read<PlayerController>();
+      await c.waitUntilReady();
+
+      if (list.isNotEmpty) {
+        await c.startSession(list, autoplay: true);
+      } else {
+        // if already has a running session or existing list
+        await c.play();
+      }
+    });
   }
-}
-
-void _openSettings(BuildContext context) {
-  showModalBottomSheet(
-    context: context,
-    isScrollControlled: true,
-    backgroundColor: Colors.transparent,
-    builder: (_) {
-      return const _SettingsSheet();
-    },
-  );
-}
-
-class _PlayerView extends StatelessWidget {
-  const _PlayerView();
 
   @override
   Widget build(BuildContext context) {
-    final controller = context.watch<PlayerController>();
-    final state = controller.state;
+    final c = context.watch<PlayerController>();
+    final PlayerState s = c.state;
     final size = MediaQuery.of(context).size;
 
     return Scaffold(
       body: Stack(
         children: [
-          /// Background Image
           Positioned.fill(
             child: Image.asset('assets/images/music.jpg', fit: BoxFit.cover),
           ),
-
-          /// Dark Overlay
           Positioned.fill(
             child: Container(
               color: Colors.black.withAlpha((0.93 * 255).round()),
             ),
           ),
-
           SafeArea(
             child: Column(
               children: [
-                /// Top Bar
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
                   child: Row(
                     children: [
                       IconButton(
@@ -71,8 +70,6 @@ class _PlayerView extends StatelessWidget {
                     ],
                   ),
                 ),
-
-                /// Header Card
                 Container(
                   height: size.height * 0.07,
                   width: size.width * 0.7,
@@ -99,74 +96,76 @@ class _PlayerView extends StatelessWidget {
                     ],
                   ),
                 ),
-
                 const Spacer(),
-
                 SizedBox(
                   height: size.height * 0.45,
-                  child: PageView.builder(
-                    controller: controller.pageController,
-                    scrollDirection: Axis.vertical,
-                    itemCount: controller.affirmations.length,
-                    onPageChanged: controller.onPageChanged,
-                    itemBuilder: (_, index) {
-                      final item = controller.affirmations[index];
-                      return Center(
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 24),
+                  child: (c.affirmations.isEmpty)
+                      ? const Center(
                           child: Text(
-                            item['affirmation_text'],
-                            maxLines: 5,
-                            textAlign: TextAlign.center,
-                            style: const TextStyle(
-                              fontSize: 28,
-                              color: Colors.white,
-                              fontWeight: FontWeight.w500,
-                            ),
+                            'No affirmations available',
+                            style: TextStyle(color: Colors.white),
                           ),
+                        )
+                      : PageView.builder(
+                          controller: c.pageController,
+                          scrollDirection: Axis.vertical,
+                          itemCount: c.affirmations.length,
+                          onPageChanged: c.onPageChanged,
+                          itemBuilder: (_, index) {
+                            final item = c.affirmations[index];
+                            final txt =
+                                (item['affirmation_text'] ?? '').toString();
+                            return Center(
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 24),
+                                child: Text(
+                                  txt,
+                                  maxLines: 5,
+                                  textAlign: TextAlign.center,
+                                  style: const TextStyle(
+                                    fontSize: 28,
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ),
+                            );
+                          },
                         ),
-                      );
-                    },
-                  ),
                 ),
-
                 const Spacer(),
-
-                /// Action Icons (Heart / Repeat / Menu)
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(
-                      controller.affirmations[state.index]['is_favorite'] ==
-                              true
-                          ? Icons.favorite
-                          : Icons.favorite_border,
-                      color:
-                          controller.affirmations[state.index]['is_favorite'] ==
-                              true
-                          ? Colors.pink
-                          : Colors.white,
-                      size: 30,
-                    ),
-                    const SizedBox(width: 40),
                     GestureDetector(
-                      onTap: controller.repeat,
-                      child: const Icon(
-                        Icons.repeat,
-                        color: Colors.white,
+                      onTap: c.toggleFavorite,
+                      child: Icon(
+                        (c.affirmations.isNotEmpty &&
+                                (c.affirmations[s.index]['is_favorite'] == true))
+                            ? Icons.favorite
+                            : Icons.favorite_border,
+                        color: (c.affirmations.isNotEmpty &&
+                                (c.affirmations[s.index]['is_favorite'] == true))
+                            ? Colors.pink
+                            : Colors.white,
                         size: 30,
                       ),
                     ),
                     const SizedBox(width: 40),
-                    const Icon(Icons.more_horiz, color: Colors.white, size: 30),
+                    GestureDetector(
+                      onTap: () => c.repeat(),
+                      child: const Icon(Icons.repeat,
+                          color: Colors.white, size: 30),
+                    ),
+                    const SizedBox(width: 40),
+                    const Icon(Icons.more_horiz,
+                        color: Colors.white, size: 30),
                   ],
                 ),
-
-                const SizedBox(height: 30),
-
-                /// Play / Pause + Progress
+                const SizedBox(height: 26),
                 GestureDetector(
-                  onTap: controller.playPause,
+                  onTap: c.playPause,
                   child: Stack(
                     alignment: Alignment.center,
                     children: [
@@ -174,7 +173,7 @@ class _PlayerView extends StatelessWidget {
                         height: 90,
                         width: 90,
                         child: CircularProgressIndicator(
-                          value: state.progress,
+                          value: s.progress,
                           strokeWidth: 5,
                           backgroundColor: Colors.white,
                           valueColor: const AlwaysStoppedAnimation(
@@ -183,20 +182,34 @@ class _PlayerView extends StatelessWidget {
                         ),
                       ),
                       Icon(
-                        state.isPaused ? Icons.play_arrow : Icons.pause,
+                        s.isPaused ? Icons.play_arrow : Icons.pause,
                         color: Colors.white,
                         size: 40,
                       ),
                     ],
                   ),
                 ),
-
-                const SizedBox(height: 40),
-
-                /// Bottom Tabs
+                const SizedBox(height: 30),
                 Padding(
                   padding: const EdgeInsets.only(bottom: 16),
-                  child: const PlayerBottomTabs(),
+                  child: BottomTabs(
+                    onTap: (tab) async {
+                      c.selectTab(tab);
+                      if (tab == PlayerTab.voice) await c.loadVoices();
+                      if (tab == PlayerTab.music) await c.fetchMusic();
+
+                      if (!mounted) return;
+                      showModalBottomSheet(
+                        context: context,
+                        isScrollControlled: true,
+                        backgroundColor: Colors.transparent,
+                        builder: (_) => ChangeNotifierProvider.value(
+                          value: c,
+                          child: const SettingsSheet(),
+                        ),
+                      );
+                    },
+                  ),
                 ),
               ],
             ),
@@ -207,28 +220,25 @@ class _PlayerView extends StatelessWidget {
   }
 }
 
-class PlayerBottomTabs extends StatelessWidget {
-  const PlayerBottomTabs({super.key});
+class BottomTabs extends StatelessWidget {
+  final Future<void> Function(PlayerTab tab) onTap;
+  const BottomTabs({super.key, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
-    final controller = context.watch<PlayerController>();
+    final c = context.watch<PlayerController>();
 
-    Widget tab(PlayerTab tab, String title, String img) {
-      final isActive = controller.selectedTab == tab;
-
+    Widget pill(PlayerTab tab, String title, String img) {
+      final active = c.selectedTab == tab;
       return GestureDetector(
-        onTap: () {
-          controller.selectTab(tab);
-         
-        },
+        onTap: () => onTap(tab),
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 250),
           height: 45,
-          width: isActive ? 130 : 110,
+          width: active ? 130 : 110,
           padding: const EdgeInsets.symmetric(horizontal: 12),
           decoration: BoxDecoration(
-            color: isActive ? Colors.black : Colors.grey.shade300,
+            color: active ? Colors.black : Colors.grey.shade300,
             borderRadius: BorderRadius.circular(30),
           ),
           child: Row(
@@ -236,7 +246,7 @@ class PlayerBottomTabs extends StatelessWidget {
             children: [
               Text(
                 title,
-                style: TextStyle(color: isActive ? Colors.white : Colors.black),
+                style: TextStyle(color: active ? Colors.white : Colors.black),
               ),
               CircleAvatar(radius: 18, backgroundImage: AssetImage(img)),
             ],
@@ -248,50 +258,10 @@ class PlayerBottomTabs extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       children: [
-        tab(PlayerTab.voice, 'Voice', 'assets/profilepic/profile2.jpg'),
-        tab(PlayerTab.time, 'Time', 'assets/images/timer.jpg'),
-        tab(PlayerTab.music, 'Music', 'assets/images/music1.jpg'),
+        pill(PlayerTab.voice, 'Voice', 'assets/profilepic/profile2.jpg'),
+        pill(PlayerTab.time, 'Time', 'assets/images/timer.jpg'),
+        pill(PlayerTab.music, 'Music', 'assets/images/music1.jpg'),
       ],
-    );
-  }
-}
-
-class _SettingsSheet extends StatelessWidget {
-  const _SettingsSheet();
-
-  @override
-  Widget build(BuildContext context) {
-    final controller = context.watch<PlayerController>();
-
-    return Container(
-      height: MediaQuery.of(context).size.height * 0.65,
-      decoration: const BoxDecoration(
-        color: Color(0xFF191919),
-        borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
-      ),
-      child: Column(
-        children: [
-          const SizedBox(height: 12),
-
-          const PlayerBottomTabs(),
-          const SizedBox(height: 20),
-
-          Expanded(
-            child: Builder(
-              builder: (_) {
-                switch (controller.selectedTab) {
-                  case PlayerTab.voice:
-                    return const VoiceTab();
-                  case PlayerTab.time:
-                    return const TimeTab();
-                  case PlayerTab.music:
-                    return const MusicTab();
-                }
-              },
-            ),
-          ),
-        ],
-      ),
     );
   }
 }

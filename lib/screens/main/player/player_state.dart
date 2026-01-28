@@ -1,10 +1,13 @@
+// =============================
+// lib/screens/main/player/player_state.dart
+// =============================
 import 'package:flutter/foundation.dart';
 
 @immutable
 class PlayerState {
   final int index;
   final bool isPaused;
-  final double progress; // 0 → 1
+  final double progress; // 0..1
 
   const PlayerState({
     required this.index,

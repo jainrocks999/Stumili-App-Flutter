@@ -174,6 +174,7 @@ class _PlaylistDailtsScreenState extends State<PlaylistDailtsScreen> {
                             if (!mounted) {
                               return;
                             }
+                            // ignore: use_build_context_synchronously
                             Navigator.pop(context);
                           }
                           if (result['action'] == 'play') {
@@ -181,6 +182,7 @@ class _PlaylistDailtsScreenState extends State<PlaylistDailtsScreen> {
                               return;
                             }
                             Navigator.pushNamed(
+                              // ignore: use_build_context_synchronously
                               context,
                               AppRoutes.player,
                               arguments: {"affirmations": affirmations},
@@ -191,6 +193,7 @@ class _PlaylistDailtsScreenState extends State<PlaylistDailtsScreen> {
                               return;
                             }
                             final result = await Navigator.push(
+                              // ignore: use_build_context_synchronously
                               context,
                               MaterialPageRoute(
                                 builder: (_) => EditPlaylistScreen(

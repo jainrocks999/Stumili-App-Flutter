@@ -4,11 +4,13 @@ import 'package:weather_app/widgets/home/horizontal.dart';
 class GroupsSection extends StatelessWidget {
   final List groups;
   final bool loading;
+    final Function(dynamic item) onPress;
 
   const GroupsSection({
     super.key,
     required this.groups,
     required this.loading,
+    required this.onPress
   });
 
   @override
@@ -31,7 +33,9 @@ class GroupsSection extends StatelessWidget {
               HorizontalSection(
                 heading: item['group_name'],
                 data: item['categories'],
-                onPress: (category) {},
+                onPress: (category) {
+                  onPress(category);
+                },
              
               ),
               const SizedBox(height: 24),

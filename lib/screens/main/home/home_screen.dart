@@ -4,6 +4,7 @@ import 'package:weather_app/core/fonts.dart';
 import 'package:weather_app/core/secure_storage.dart';
 // import 'package:weather_app/models/affirmation_model.dart';
 import 'package:weather_app/navigation/routes/app_routes.dart';
+import 'package:weather_app/screens/main/player/mini_player_bar.dart';
 import 'package:weather_app/services/api_service.dart';
 import 'package:weather_app/widgets/home/groups_section.dart';
 import 'package:weather_app/widgets/home/header.dart';
@@ -128,29 +129,27 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void showLoader(BuildContext context) {
-  showDialog(
-    context: context,
-    barrierDismissible: false,
-     useRootNavigator: true,
-    builder: (_) => const Center(
-      child: CircularProgressIndicator(),
-    ),
-  );
-}
-
-void hideLoader(BuildContext context) {
-  if (Navigator.canPop(context)) {
-     Navigator.of(context, rootNavigator: true).pop();
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      useRootNavigator: true,
+      builder: (_) => const Center(child: CircularProgressIndicator()),
+    );
   }
-}
+
+  void hideLoader(BuildContext context) {
+    if (Navigator.canPop(context)) {
+      Navigator.of(context, rootNavigator: true).pop();
+    }
+  }
 
   void affirmationByCategory(dynamic item) async {
     final userId = await SecureStore.getUserId();
     final token = await SecureStore.getToken();
-    if(!mounted){
+    if (!mounted) {
       return;
     }
-      showLoader(context); 
+    showLoader(context);
     try {
       final response = await ApiService.getRequest(
         "/categoryByAffermation",
@@ -162,27 +161,29 @@ void hideLoader(BuildContext context) {
       );
       final data = response.data['data'];
       if (!mounted) return;
-       hideLoader(context);
+      hideLoader(context);
       Navigator.pushNamed(
         context,
         AppRoutes.playlistdailts,
         arguments: {"affirmation": data, "category": item},
       );
     } catch (err) {
-       hideLoader(context);
+      hideLoader(context);
       debugPrint("fetching affrimation erroor $err");
-    }finally{
+    } finally {
       // hideLoader(context);
     }
   }
 
-
-
- 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
+      bottomNavigationBar: MiniPlayerBar(
+        onTapOpenPlayer: () {
+          Navigator.pushNamed(context, AppRoutes.player);
+        },
+      ),
       body: SafeArea(
         child: Column(
           children: [
@@ -224,7 +225,7 @@ void hideLoader(BuildContext context) {
                             final item = lastSessions[index];
                             return GestureDetector(
                               onTap: () {
-                                final originalData=item.originalData;
+                                final originalData = item.originalData;
                                 affirmationByCategory(originalData);
                               },
                               child: Container(
@@ -269,17 +270,19 @@ void hideLoader(BuildContext context) {
                           heading: "Rocommended For You",
                           data: popularPlayList,
                           onPress: affirmationByCategory,
-                        
                         ),
 
                         HorizontalSection(
                           heading: "Popular Playlist",
                           data: categories,
                           onPress: affirmationByCategory,
-                       
                         ),
                         const SizedBox(height: 24),
-                        GroupsSection(groups: groups, loading: loading),
+                        GroupsSection(
+                          groups: groups,
+                          loading: loading,
+                          onPress: affirmationByCategory,
+                        ),
                       ],
                     ),
             ),
@@ -293,8 +296,8 @@ void hideLoader(BuildContext context) {
 class LastSessionModel {
   final String id;
   final String categoryName;
-  final String image;      // random image for UI
-  final String imgTitle;   // random title for UI
+  final String image; // random image for UI
+  final String imgTitle; // random title for UI
   final Map<String, dynamic> originalData; // original API item
 
   LastSessionModel({
@@ -339,8 +342,6 @@ Future<List<LastSessionModel>> fetchLastSessions(String userId) async {
     );
   }).toList();
 }
-
-
 
 const List<Map<String, String>> imgList = [
   {
