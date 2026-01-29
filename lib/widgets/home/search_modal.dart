@@ -1,7 +1,9 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:weather_app/core/helper.dart';
 import 'package:weather_app/core/secure_storage.dart';
 import 'package:weather_app/services/api_service.dart';
+import 'package:weather_app/widgets/affirmation_menu_modal.dart';
 import 'package:weather_app/widgets/home/search_list.dart';
 
 class SearchModal extends StatefulWidget {
@@ -29,7 +31,6 @@ class _SearchModalState extends State<SearchModal> {
   List categories = [];
   List affirmations = [];
 
-  /// 🔥 SAME AS RN: handleonSearch
   Future<void> handleOnSearch(String input, String type) async {
     if (input.isEmpty) {
       setState(() {
@@ -77,6 +78,45 @@ class _SearchModalState extends State<SearchModal> {
     });
   }
 
+  final Set<int> _favLoading = <int>{};
+  bool _isFavLoading(int i) => _favLoading.contains(i);
+
+  void _openAffirmationMenu(Map<String, dynamic> item, int index) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (_) {
+        return AffirmationMenuModal(
+          affirmation: item,
+          loading: _isFavLoading(index),
+          onClose: () => Navigator.pop(context),
+          onFavoriteChanged: (isFav) async {
+            if (_favLoading.contains(index)) return;
+
+            setState(() => _favLoading.add(index));
+
+            try {
+              final newValue = await CommonHelper.toggleFavorite(
+                item: item,
+                currentValue: isFav, // isFav = current value
+                isAffimation: true,
+              );
+
+              if (!mounted) return;
+              setState(() => item['is_favorite'] = newValue);
+            } catch (_) {
+              // optional toast/log
+            } finally {
+              if (!mounted) return;
+              setState(() => _favLoading.remove(index));
+            }
+          },
+        );
+      },
+    );
+  }
+
   @override
   void dispose() {
     _debounce?.cancel();
@@ -86,6 +126,10 @@ class _SearchModalState extends State<SearchModal> {
   @override
   Widget build(BuildContext context) {
     if (!widget.visible) return const SizedBox();
+    final bool showCategories =
+        (searchType == 'All' || searchType == 'playlist');
+    final bool showAffirmations =
+        (searchType == 'All' || searchType == 'affirmation');
 
     return Scaffold(
       backgroundColor: const Color(0xff191919),
@@ -132,7 +176,7 @@ class _SearchModalState extends State<SearchModal> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         /// PLAYLISTS
-                        if (categories.isNotEmpty) ...[
+                        if (showCategories && categories.isNotEmpty) ...[
                           _title('Playlist'),
                           SearchList(
                             cate: categories,
@@ -140,14 +184,26 @@ class _SearchModalState extends State<SearchModal> {
                               widget.onCategories(item);
                               widget.onClose();
                             },
+                            onPressPlay: (item) {
+                              widget.onCategories(item);
+                              widget.onClose();
+                            },
                           ),
                         ],
 
                         /// AFFIRMATIONS
-                        if (affirmations.isNotEmpty) ...[
+                        if (showAffirmations && affirmations.isNotEmpty) ...[
                           _title('Affirmations'),
-                          ...affirmations.map(
-                            (item) => GestureDetector(
+                          ...List.generate(affirmations.length, (index) {
+                            final item =
+                                affirmations[index] as Map<String, dynamic>;
+                            final text = (item["affirmation_text"] ?? '')
+                                .toString();
+                            final display = text.length > 40
+                                ? '${text.substring(0, 40)}...'
+                                : text;
+
+                            return GestureDetector(
                               onTap: () {
                                 widget.onClose();
                                 Navigator.pushNamed(
@@ -169,28 +225,33 @@ class _SearchModalState extends State<SearchModal> {
                                   children: [
                                     Expanded(
                                       child: Text(
-                                        // item['affirmation_text']
-                                        //     .toString()
-                                        //     .substring(0, 40),
-                                        item["affirmation_text"].length > 40
-                                            ? item["affirmation_text"]
-                                                      .substring(0, 40) +
-                                                  '...'
-                                            : item["affirmation_text"],
+                                        display,
                                         style: const TextStyle(
                                           color: Colors.white,
                                         ),
                                       ),
                                     ),
-                                    const Icon(
-                                      Icons.more_horiz,
-                                      color: Colors.white,
+                                    InkWell(
+                                      onTap: () =>
+                                          _openAffirmationMenu(item, index),
+                                      child: _isFavLoading(index)
+                                          ? const SizedBox(
+                                              height: 18,
+                                              width: 18,
+                                              child: CircularProgressIndicator(
+                                                strokeWidth: 2,
+                                              ),
+                                            )
+                                          : const Icon(
+                                              Icons.more_horiz,
+                                              color: Colors.white,
+                                            ),
                                     ),
                                   ],
                                 ),
                               ),
-                            ),
-                          ),
+                            );
+                          }),
                         ],
                       ],
                     ),

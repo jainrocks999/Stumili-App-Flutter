@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:weather_app/screens/main/player/settings_sheet.dart';
+import 'package:weather_app/widgets/affirmation_menu_modal.dart';
 
 import 'player_controller.dart';
 import 'player_state.dart';
@@ -23,7 +24,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
 
     final args =
         (ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?) ??
-            {};
+        {};
     final list = (args['affirmations'] as List?) ?? [];
 
     WidgetsBinding.instance.addPostFrameCallback((_) async {
@@ -113,12 +114,13 @@ class _PlayerScreenState extends State<PlayerScreen> {
                           onPageChanged: c.onPageChanged,
                           itemBuilder: (_, index) {
                             final item = c.affirmations[index];
-                            final txt =
-                                (item['affirmation_text'] ?? '').toString();
+                            final txt = (item['affirmation_text'] ?? '')
+                                .toString();
                             return Center(
                               child: Padding(
                                 padding: const EdgeInsets.symmetric(
-                                    horizontal: 24),
+                                  horizontal: 24,
+                                ),
                                 child: Text(
                                   txt,
                                   maxLines: 5,
@@ -142,11 +144,14 @@ class _PlayerScreenState extends State<PlayerScreen> {
                       onTap: c.toggleFavorite,
                       child: Icon(
                         (c.affirmations.isNotEmpty &&
-                                (c.affirmations[s.index]['is_favorite'] == true))
+                                (c.affirmations[s.index]['is_favorite'] ==
+                                    true))
                             ? Icons.favorite
                             : Icons.favorite_border,
-                        color: (c.affirmations.isNotEmpty &&
-                                (c.affirmations[s.index]['is_favorite'] == true))
+                        color:
+                            (c.affirmations.isNotEmpty &&
+                                (c.affirmations[s.index]['is_favorite'] ==
+                                    true))
                             ? Colors.pink
                             : Colors.white,
                         size: 30,
@@ -155,12 +160,54 @@ class _PlayerScreenState extends State<PlayerScreen> {
                     const SizedBox(width: 40),
                     GestureDetector(
                       onTap: () => c.repeat(),
-                      child: const Icon(Icons.repeat,
-                          color: Colors.white, size: 30),
+                      child: const Icon(
+                        Icons.repeat,
+                        color: Colors.white,
+                        size: 30,
+                      ),
                     ),
                     const SizedBox(width: 40),
-                    const Icon(Icons.more_horiz,
-                        color: Colors.white, size: 30),
+                    GestureDetector(
+                      child: const Icon(
+                        Icons.more_horiz,
+                        color: Colors.white,
+                        size: 30,
+                      ),
+                      onTap: () {
+                        if (c.affirmations.isEmpty) return;
+
+                        final index = s.index;
+
+                        showModalBottomSheet(
+                          context: context,
+                          backgroundColor: Colors.transparent,
+                          isScrollControlled: true,
+                          builder: (_) => ChangeNotifierProvider.value(
+                            value: c,
+                            child: Consumer<PlayerController>(
+                              builder: (context, pc, __) {
+                                final item =
+                                    pc.affirmations[index]
+                                        as Map<String, dynamic>;
+
+                                return AffirmationMenuModal(
+                                  affirmation: item, // ✅ current affirmation
+                                  loading: pc.isFavLoading(
+                                    index,
+                                  ), // ✅ loading state
+                                  onClose: () => Navigator.pop(context),
+                                  onFavoriteChanged: (_) async {
+                                    await pc.toggleFavoriteAt(
+                                      index,
+                                    ); // ✅ controller toggle
+                                  },
+                                );
+                              },
+                            ),
+                          ),
+                        );
+                      },
+                    ),
                   ],
                 ),
                 const SizedBox(height: 26),

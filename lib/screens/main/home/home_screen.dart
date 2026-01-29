@@ -123,7 +123,7 @@ class _HomeScreenState extends State<HomeScreen> {
       builder: (_) => SearchModal(
         visible: true,
         onClose: () => Navigator.pop(context),
-        onCategories: (data) => Navigator.pop(context),
+        onCategories: (data) => affirmationByCategory(data),
       ),
     );
   }

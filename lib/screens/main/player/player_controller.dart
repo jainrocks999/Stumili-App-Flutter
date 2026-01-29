@@ -4,6 +4,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:just_audio/just_audio.dart' as ja;
+import 'package:weather_app/core/helper.dart';
 
 import 'player_models.dart';
 import 'player_state.dart';
@@ -92,9 +93,46 @@ class PlayerController extends ChangeNotifier {
     _init();
   }
 
-  bool _ttsStarted = false;   // confirms actual speaking started
-bool _ttsBusy = false;      // prevents overlaps
-Timer? _ttsRetryTimer;
+  bool _ttsStarted = false; // confirms actual speaking started
+  // ignore: unused_field
+  bool _ttsBusy = false; // prevents overlaps
+  Timer? _ttsRetryTimer;
+// PlayerController ke andar
+final Set<int> _favLoading = <int>{};
+
+bool isFavLoading(int index) => _favLoading.contains(index);
+
+Future<void> toggleFavoriteAt(int index) async {
+  if (affirmations.isEmpty) return;
+  if (index < 0 || index >= affirmations.length) return;
+  if (_favLoading.contains(index)) return;
+
+  _favLoading.add(index);
+  notifyListeners();
+
+  final Map<String, dynamic> item =
+      Map<String, dynamic>.from(affirmations[index] as Map);
+
+  final bool currentValue = (item['is_favorite'] == true);
+
+  try {
+    final bool newValue = await CommonHelper.toggleFavorite(
+      item: item,
+      currentValue: currentValue,
+      isAffimation: true,
+    );
+
+    item['is_favorite'] = newValue;
+    affirmations[index] = item;
+  } finally {
+    _favLoading.remove(index);
+    notifyListeners();
+  }
+}
+
+// current item shortcut
+Future<void> toggleFavorite1() => toggleFavoriteAt(_state.index);
+
 
   // ================= INIT =================
   Future<void> _init() async {
@@ -131,30 +169,30 @@ Timer? _ttsRetryTimer;
 
     await loadVoices();
 
-  try {
-    await tts.awaitSpeakCompletion(true);
+    try {
+      await tts.awaitSpeakCompletion(true);
 
-    tts.setStartHandler(() {
-      _ttsStarted = true;
-      _ttsBusy = true;
-    });
+      tts.setStartHandler(() {
+        _ttsStarted = true;
+        _ttsBusy = true;
+      });
 
-    tts.setCompletionHandler(() {
-      _ttsBusy = false;
-      _ttsStarted = false;
-      _handleTtsComplete();
-    });
+      tts.setCompletionHandler(() {
+        _ttsBusy = false;
+        _ttsStarted = false;
+        _handleTtsComplete();
+      });
 
-    tts.setCancelHandler(() {
-      _ttsBusy = false;
-      _ttsStarted = false;
-    });
+      tts.setCancelHandler(() {
+        _ttsBusy = false;
+        _ttsStarted = false;
+      });
 
-    tts.setErrorHandler((msg) {
-      _ttsBusy = false;
-      _ttsStarted = false;
-    });
-  } catch (_) {}
+      tts.setErrorHandler((msg) {
+        _ttsBusy = false;
+        _ttsStarted = false;
+      });
+    } catch (_) {}
 
     _ready = true;
     if (!_readyCompleter.isCompleted) _readyCompleter.complete();
@@ -175,82 +213,81 @@ Timer? _ttsRetryTimer;
   }
 
   // ================= SESSION =================
-Future<void> startSession(
-  List newAffirmations, {
-  bool autoplay = true,
-  int? minutes,
-}) async {
-  await waitUntilReady();
+  Future<void> startSession(
+    List newAffirmations, {
+    bool autoplay = true,
+    int? minutes,
+  }) async {
+    await waitUntilReady();
 
-  affirmations
-    ..clear()
-    ..addAll(newAffirmations);
+    affirmations
+      ..clear()
+      ..addAll(newAffirmations);
 
-  if (minutes != null) maxTimeMinutes = minutes;
+    if (minutes != null) maxTimeMinutes = minutes;
 
-  _elapsedSeconds = 0;
-  _sessionTimer?.cancel();
+    _elapsedSeconds = 0;
+    _sessionTimer?.cancel();
 
-  await _stopTtsInternal();
+    await _stopTtsInternal();
 
-  // ✅ ALWAYS start in paused state
-  _state = _state.copyWith(index: 0, progress: 0, isPaused: true);
-  notifyListeners();
-
-  // page reset
-  if (pageController.hasClients) {
-    pageController.jumpToPage(0);
-  }
-
-  if (autoplay) {
-    // ✅ give 1 frame so UI + page attach ho jaye
-  await Future.delayed(const Duration(milliseconds: 300));
-    await play();
-  }
-}
-
-
-
-  // ================= PLAY / PAUSE =================
-Future<void> play() async {
-  await waitUntilReady();
-  if (affirmations.isEmpty) return;
-  if (!_state.isPaused) return; // Pehle se chal raha hai toh return
-  if (_starting) return;
-
-  _starting = true;
-  try {
-    // 1. UI ko turant update karein
-    _state = _state.copyWith(isPaused: false);
+    // ✅ ALWAYS start in paused state
+    _state = _state.copyWith(index: 0, progress: 0, isPaused: true);
     notifyListeners();
 
-    // 2. Timer shuru karein
-    _startSessionTimer();
-
-    // 3. Background music play karein
-    if (bgEnabled) {
-      bgPlayer.play().catchError((e) => debugPrint("BG Music Error: $e"));
+    // page reset
+    if (pageController.hasClients) {
+      pageController.jumpToPage(0);
     }
 
-    // 4. TTS trigger karein (Restart: true aur Retry: true zaroori hai)
-    await _speakCurrent(restart: true, retryIfNotStarted: true);
-  } finally {
-    _starting = false;
+    if (autoplay) {
+      // ✅ give 1 frame so UI + page attach ho jaye
+      await Future.delayed(const Duration(milliseconds: 300));
+      await play();
+    }
   }
-}
 
-Future<void> pause() async {
-  if (_state.isPaused) return;
+  // ================= PLAY / PAUSE =================
+  Future<void> play() async {
+    await waitUntilReady();
+    if (affirmations.isEmpty) return;
+    if (!_state.isPaused) return; // Pehle se chal raha hai toh return
+    if (_starting) return;
 
-  _state = _state.copyWith(isPaused: true);
-  notifyListeners();
+    _starting = true;
+    try {
+      // 1. UI ko turant update karein
+      _state = _state.copyWith(isPaused: false);
+      notifyListeners();
 
-  _sessionTimer?.cancel();
+      // 2. Timer shuru karein
+      _startSessionTimer();
 
-  try { await bgPlayer.pause(); } catch (_) {}
-  await _stopTtsInternal();
-}
+      // 3. Background music play karein
+      if (bgEnabled) {
+        bgPlayer.play().catchError((e) => debugPrint("BG Music Error: $e"));
+      }
 
+      // 4. TTS trigger karein (Restart: true aur Retry: true zaroori hai)
+      await _speakCurrent(restart: true, retryIfNotStarted: true);
+    } finally {
+      _starting = false;
+    }
+  }
+
+  Future<void> pause() async {
+    if (_state.isPaused) return;
+
+    _state = _state.copyWith(isPaused: true);
+    notifyListeners();
+
+    _sessionTimer?.cancel();
+
+    try {
+      await bgPlayer.pause();
+    } catch (_) {}
+    await _stopTtsInternal();
+  }
 
   void playPause() {
     if (_state.isPaused) {
@@ -260,71 +297,70 @@ Future<void> pause() async {
     }
   }
 
-Future<void> repeat() async {
-  if (affirmations.isEmpty) return;
+  Future<void> repeat() async {
+    if (affirmations.isEmpty) return;
 
-  _elapsedSeconds = 0;
-  _sessionTimer?.cancel();
-  await _stopTtsInternal();
+    _elapsedSeconds = 0;
+    _sessionTimer?.cancel();
+    await _stopTtsInternal();
 
-  _state = _state.copyWith(index: 0, progress: 0);
-  notifyListeners();
+    _state = _state.copyWith(index: 0, progress: 0);
+    notifyListeners();
 
-  if (pageController.hasClients) pageController.jumpToPage(0);
+    if (pageController.hasClients) pageController.jumpToPage(0);
 
-  if (!_state.isPaused) {
-    _startSessionTimer();
-    await _speakCurrent(restart: true);
+    if (!_state.isPaused) {
+      _startSessionTimer();
+      await _speakCurrent(restart: true);
+    }
   }
-}
-
 
   // ================= PAGE =================
   void onPageChanged(int index) {
-  if (affirmations.isEmpty) return;
+    if (affirmations.isEmpty) return;
 
-  final safe = index.clamp(0, affirmations.length - 1);
-  _state = _state.copyWith(index: safe);
-  notifyListeners();
-
-  if (_state.isPaused) {
-    play(); // ✅ will start + speak
-  } else {
-    _speakCurrent(restart: true); // ✅ playing -> speak new page
-  }
-}
-
-Future<void> next() async {
-  if (affirmations.isEmpty) return;
-  final lastIndex = affirmations.length - 1;
-
-  if (_state.index >= lastIndex) {
-    // ✅ Agar list khatam ho gayi, toh 0 se restart karein
-    _state = _state.copyWith(index: 0);
+    final safe = index.clamp(0, affirmations.length - 1);
+    _state = _state.copyWith(index: safe);
     notifyListeners();
 
-    if (pageController.hasClients) {
-      // Direct jump karein taaki loop seamless lage
-      pageController.jumpToPage(0);
-    }
-    
-    // Dobara bolna shuru karein (Sequence guard handles the rest)
-    if (!_state.isPaused) await _speakCurrent(restart: true);
-  } else {
-    // Normal next behavior
-    final target = _state.index + 1;
-    if (pageController.hasClients) {
-      await pageController.nextPage(
-        duration: const Duration(milliseconds: 280),
-        curve: Curves.easeInOut,
-      );
+    if (_state.isPaused) {
+      play(); // ✅ will start + speak
     } else {
-      _state = _state.copyWith(index: target);
-      notifyListeners();
-      if (!_state.isPaused) await _speakCurrent();
+      _speakCurrent(restart: true); // ✅ playing -> speak new page
     }
   }
-}
+
+  Future<void> next() async {
+    if (affirmations.isEmpty) return;
+    final lastIndex = affirmations.length - 1;
+
+    if (_state.index >= lastIndex) {
+      // ✅ Agar list khatam ho gayi, toh 0 se restart karein
+      _state = _state.copyWith(index: 0);
+      notifyListeners();
+
+      if (pageController.hasClients) {
+        // Direct jump karein taaki loop seamless lage
+        pageController.jumpToPage(0);
+      }
+
+      // Dobara bolna shuru karein (Sequence guard handles the rest)
+      if (!_state.isPaused) await _speakCurrent(restart: true);
+    } else {
+      // Normal next behavior
+      final target = _state.index + 1;
+      if (pageController.hasClients) {
+        await pageController.nextPage(
+          duration: const Duration(milliseconds: 280),
+          curve: Curves.easeInOut,
+        );
+      } else {
+        _state = _state.copyWith(index: target);
+        notifyListeners();
+        if (!_state.isPaused) await _speakCurrent();
+      }
+    }
+  }
 
   // ================= TIMER / PROGRESS =================
   void setSessionMinutes(int minutes) {
@@ -360,61 +396,59 @@ Future<void> next() async {
   }
 
   // ================= TTS (ROBUST) =================
- Future<void> _stopTtsInternal() async {
-  _suppressCompletion = true;
-  try {
-    await tts.stop();
-  } catch (_) {}
-  _suppressCompletion = false;
-}
-
-Future<void> _speakCurrent({
-  bool restart = true,
-  bool retryIfNotStarted = false,
-}) async {
-  if (affirmations.isEmpty || _state.isPaused) return;
-
-  final text = currentText.trim();
-  if (text.isEmpty) return;
-
-  // ✅ Sequence Guard: Purane pending calls ko ignore karne ke liye
-  _speakSeq++;
-  _activeSpeakSeq = _speakSeq;
-  final currentSeq = _activeSpeakSeq;
-
-  _ttsRetryTimer?.cancel();
-  _ttsStarted = false;
-
-  if (restart) {
-    await tts.stop(); 
-    // ✅ Most Important: Engine ko reset hone ke liye saas lene ka waqt dein
-    await Future.delayed(const Duration(milliseconds: 200));
+  Future<void> _stopTtsInternal() async {
+    _suppressCompletion = true;
+    try {
+      await tts.stop();
+    } catch (_) {}
+    _suppressCompletion = false;
   }
 
-  // Check karein ki user ne delay ke beech mein pause toh nahi kar diya
-  if (currentSeq != _activeSpeakSeq || _state.isPaused) return;
+  Future<void> _speakCurrent({
+    bool restart = true,
+    bool retryIfNotStarted = false,
+  }) async {
+    if (affirmations.isEmpty || _state.isPaused) return;
 
-  try {
-    await tts.setVolume(ttsVolume);
-    // speak() trigger karein
-    final result = await tts.speak(text);
-    if (result == 1) _ttsStarted = true;
-  } catch (e) {
-    debugPrint("TTS Speak Error: $e");
+    final text = currentText.trim();
+    if (text.isEmpty) return;
+
+    // ✅ Sequence Guard: Purane pending calls ko ignore karne ke liye
+    _speakSeq++;
+    _activeSpeakSeq = _speakSeq;
+    final currentSeq = _activeSpeakSeq;
+
+    _ttsRetryTimer?.cancel();
+    _ttsStarted = false;
+
+    if (restart) {
+      await tts.stop();
+      // ✅ Most Important: Engine ko reset hone ke liye saas lene ka waqt dein
+      await Future.delayed(const Duration(milliseconds: 200));
+    }
+
+    // Check karein ki user ne delay ke beech mein pause toh nahi kar diya
+    if (currentSeq != _activeSpeakSeq || _state.isPaused) return;
+
+    try {
+      await tts.setVolume(ttsVolume);
+      // speak() trigger karein
+      final result = await tts.speak(text);
+      if (result == 1) _ttsStarted = true;
+    } catch (e) {
+      debugPrint("TTS Speak Error: $e");
+    }
+
+    // ✅ Fallback Retry: Agar engine ne 'start' signal nahi bheja toh 600ms baad fir koshish karein
+    if (retryIfNotStarted) {
+      _ttsRetryTimer = Timer(const Duration(milliseconds: 600), () async {
+        if (!_ttsStarted && !_state.isPaused && currentSeq == _activeSpeakSeq) {
+          debugPrint("TTS silent tha, retry kar raha hoon...");
+          await tts.speak(text);
+        }
+      });
+    }
   }
-
-  // ✅ Fallback Retry: Agar engine ne 'start' signal nahi bheja toh 600ms baad fir koshish karein
-  if (retryIfNotStarted) {
-    _ttsRetryTimer = Timer(const Duration(milliseconds: 600), () async {
-      if (!_ttsStarted && !_state.isPaused && currentSeq == _activeSpeakSeq) {
-        debugPrint("TTS silent tha, retry kar raha hoon...");
-        await tts.speak(text);
-      }
-    });
-  }
-}
-
-
 
   // completion handler calls this sync method
   void _handleTtsComplete() {
@@ -443,15 +477,39 @@ Future<void> _speakCurrent({
     });
   }
 
-  // ================= FAVORITE =================
-  void toggleFavorite() {
+  Future<void> toggleFavorite() async {
     if (affirmations.isEmpty) return;
-    final cur = affirmations[_state.index] as Map;
-    cur['is_favorite'] = !(cur['is_favorite'] == true);
+
+    final Map<String, dynamic> cur = Map<String, dynamic>.from(
+      affirmations[_state.index] as Map,
+    );
+
+    final bool oldValue = (cur['is_favorite'] == true);
+    final bool nextValue = !oldValue;
+
+    cur['is_favorite'] = nextValue;
+    affirmations[_state.index] = cur;
     notifyListeners();
+    try {
+      final bool serverValue = await CommonHelper.toggleFavorite(
+        item: cur,
+        currentValue: oldValue,
+        isAffimation: true
+      );
+
+      if (serverValue != nextValue) {
+        cur['is_favorite'] = serverValue;
+        affirmations[_state.index] = cur;
+        notifyListeners();
+      }
+    } catch (e) {
+      cur['is_favorite'] = oldValue;
+      affirmations[_state.index] = cur;
+      notifyListeners();
+    }
   }
 
-  // ================= VOICES =================
+
   String _getNameForVoice(String id) {
     if (_voiceNameMap.containsKey(id)) return _voiceNameMap[id]!;
     final used = _voiceNameMap.values.toSet();

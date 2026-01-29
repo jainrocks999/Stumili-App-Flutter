@@ -106,7 +106,7 @@ class _SavePlaylistScreenState extends State<SavePlaylistScreen> {
       final int playlistId = playlistResponse.data['data']['id'];
       final selectedIds = widget.selectedIds;
 
-      if (selectedIds.isNotEmpty&&widget.isEdit) {
+      if (selectedIds.isNotEmpty&&!widget.isEdit) {
         await ApiService.postRequest(
           "/createPlayListItem",
           body: {"playlist_id": playlistId.toString(), "affirmation_text_id": selectedIds},
