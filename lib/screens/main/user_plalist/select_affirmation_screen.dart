@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:weather_app/core/secure_storage.dart';
-import 'package:weather_app/screens/main/user_plalist/edit_selected_affrimations.dart';
-import 'package:weather_app/services/api_service.dart';
-import 'package:weather_app/widgets/custom_button.dart';
+import 'package:stumili/core/secure_storage.dart';
+import 'package:stumili/screens/main/user_plalist/edit_selected_affrimations.dart';
+import 'package:stumili/services/api_service.dart';
+import 'package:stumili/widgets/custom_button.dart';
 
 class SelectAffirmationScreen extends StatefulWidget {
   const SelectAffirmationScreen({super.key});

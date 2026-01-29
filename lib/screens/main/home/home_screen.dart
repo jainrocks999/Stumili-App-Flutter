@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:weather_app/core/app_colors.dart';
-import 'package:weather_app/core/fonts.dart';
-import 'package:weather_app/core/secure_storage.dart';
-// import 'package:weather_app/models/affirmation_model.dart';
-import 'package:weather_app/navigation/routes/app_routes.dart';
-import 'package:weather_app/screens/main/player/mini_player_bar.dart';
-import 'package:weather_app/services/api_service.dart';
-import 'package:weather_app/widgets/home/groups_section.dart';
-import 'package:weather_app/widgets/home/header.dart';
-import 'package:weather_app/widgets/home/horizontal.dart';
-import 'package:weather_app/widgets/home/search_modal.dart';
+import 'package:stumili/core/app_colors.dart';
+import 'package:stumili/core/fonts.dart';
+import 'package:stumili/core/secure_storage.dart';
+// import 'package:stumili/models/affirmation_model.dart';
+import 'package:stumili/navigation/routes/app_routes.dart';
+import 'package:stumili/screens/main/player/mini_player_bar.dart';
+import 'package:stumili/services/api_service.dart';
+import 'package:stumili/widgets/home/groups_section.dart';
+import 'package:stumili/widgets/home/header.dart';
+import 'package:stumili/widgets/home/horizontal.dart';
+import 'package:stumili/widgets/home/search_modal.dart';
 import 'dart:math';
 
 class HomeScreen extends StatefulWidget {

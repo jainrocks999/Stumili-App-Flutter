@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:weather_app/core/secure_storage.dart';
-import 'package:weather_app/navigation/routes/app_routes.dart';
-import 'package:weather_app/widgets/auth/auth_background.dart';
+import 'package:stumili/core/secure_storage.dart';
+import 'package:stumili/navigation/routes/app_routes.dart';
+import 'package:stumili/widgets/auth/auth_background.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});

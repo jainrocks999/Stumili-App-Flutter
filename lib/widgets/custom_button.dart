@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:weather_app/core/fonts.dart';
+import 'package:stumili/core/fonts.dart';
 
 class CustomButton extends StatelessWidget {
   final VoidCallback? onPress;

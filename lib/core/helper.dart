@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import 'package:weather_app/core/secure_storage.dart';
-import 'package:weather_app/services/api_service.dart';
+import 'package:stumili/core/secure_storage.dart';
+import 'package:stumili/services/api_service.dart';
 
 class CommonHelper {
   static Future<bool> toggleFavorite({

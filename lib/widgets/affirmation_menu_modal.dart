@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:share_plus/share_plus.dart';
-import 'package:weather_app/widgets/add_to_playlist_sheet.dart';
+import 'package:stumili/widgets/add_to_playlist_sheet.dart';
 
 class AffirmationMenuModal extends StatelessWidget {
   final Map<String, dynamic> affirmation;

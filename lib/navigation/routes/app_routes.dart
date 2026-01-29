@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:weather_app/navigation/main_tabs.dart';
-import 'package:weather_app/screens/Intro/ask_reminder_screen.dart';
-import 'package:weather_app/screens/Intro/choose_affirmation_screen.dart';
-import 'package:weather_app/screens/Intro/interested_screen.dart';
-import 'package:weather_app/screens/Intro/welcome_screen.dart';
-import 'package:weather_app/screens/auth/login_screen.dart';
-import 'package:weather_app/screens/auth/signup_screen.dart';
-import 'package:weather_app/screens/main/player/player_screen.dart';
-import 'package:weather_app/screens/main/playlist_dailts_screen.dart';
-import 'package:weather_app/screens/main/user_plalist/select_affirmation_screen.dart';
-import 'package:weather_app/screens/splash/splash_screen.dart';
+import 'package:stumili/navigation/main_tabs.dart';
+import 'package:stumili/screens/Intro/ask_reminder_screen.dart';
+import 'package:stumili/screens/Intro/choose_affirmation_screen.dart';
+import 'package:stumili/screens/Intro/interested_screen.dart';
+import 'package:stumili/screens/Intro/welcome_screen.dart';
+import 'package:stumili/screens/auth/login_screen.dart';
+import 'package:stumili/screens/auth/signup_screen.dart';
+import 'package:stumili/screens/main/player/player_screen.dart';
+import 'package:stumili/screens/main/playlist_dailts_screen.dart';
+import 'package:stumili/screens/main/user_plalist/select_affirmation_screen.dart';
+import 'package:stumili/screens/splash/splash_screen.dart';
 
 class AppRoutes {
   static const String splash = '/';

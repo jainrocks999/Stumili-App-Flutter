@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:weather_app/screens/main/user_plalist/create_edit_playlist_screen.dart';
-import 'package:weather_app/widgets/custom_button.dart';
+import 'package:stumili/screens/main/user_plalist/create_edit_playlist_screen.dart';
+import 'package:stumili/widgets/custom_button.dart';
 
 class CreatePlaylistScreen extends StatefulWidget {
   final List<Map<String, dynamic>> affirmations;

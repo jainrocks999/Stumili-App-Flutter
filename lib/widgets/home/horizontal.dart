@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:weather_app/core/fonts.dart';
-import 'package:weather_app/core/helper.dart';
+import 'package:stumili/core/fonts.dart';
+import 'package:stumili/core/helper.dart';
 class HorizontalSection extends StatefulWidget {
   final String heading;
   final List<dynamic> data;

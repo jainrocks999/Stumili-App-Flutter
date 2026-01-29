@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import 'package:weather_app/core/helper.dart';
-import 'package:weather_app/core/secure_storage.dart';
-import 'package:weather_app/screens/main/libraries/category_menu_modal.dart';
-import 'package:weather_app/services/api_service.dart';
+import 'package:stumili/core/helper.dart';
+import 'package:stumili/core/secure_storage.dart';
+import 'package:stumili/screens/main/libraries/category_menu_modal.dart';
+import 'package:stumili/services/api_service.dart';
 
 class PlaylistActionHandler {
   static Future<Map<String, dynamic>?> openActionModal({

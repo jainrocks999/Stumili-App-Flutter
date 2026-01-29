@@ -1,6 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/widgets.dart';
-import 'package:weather_app/core/app_constants.dart';
+import 'package:stumili/core/app_constants.dart';
 
 class ApiService {
   static final Dio dio = Dio(

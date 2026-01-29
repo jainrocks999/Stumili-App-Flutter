@@ -1,10 +1,10 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import 'package:weather_app/core/secure_storage.dart';
-import 'package:weather_app/screens/main/user_plalist/affirmation_menu.dart';
-import 'package:weather_app/screens/main/user_plalist/create_edit_playlist_screen.dart';
-import 'package:weather_app/services/api_service.dart';
+import 'package:stumili/core/secure_storage.dart';
+import 'package:stumili/screens/main/user_plalist/affirmation_menu.dart';
+import 'package:stumili/screens/main/user_plalist/create_edit_playlist_screen.dart';
+import 'package:stumili/services/api_service.dart';
 
 class EditPlaylistScreen extends StatefulWidget {
   final Map<String, dynamic> item;

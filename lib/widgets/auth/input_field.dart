@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:weather_app/core/fonts.dart';
+import 'package:stumili/core/fonts.dart';
 
 class InputField extends StatelessWidget {
   final String? hintText;

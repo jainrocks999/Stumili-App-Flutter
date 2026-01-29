@@ -1,10 +1,10 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:weather_app/core/helper.dart';
-import 'package:weather_app/core/secure_storage.dart';
-import 'package:weather_app/services/api_service.dart';
-import 'package:weather_app/widgets/affirmation_menu_modal.dart';
-import 'package:weather_app/widgets/home/search_list.dart';
+import 'package:stumili/core/helper.dart';
+import 'package:stumili/core/secure_storage.dart';
+import 'package:stumili/services/api_service.dart';
+import 'package:stumili/widgets/affirmation_menu_modal.dart';
+import 'package:stumili/widgets/home/search_list.dart';
 
 class SearchModal extends StatefulWidget {
   final bool visible;

@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:weather_app/core/secure_storage.dart';
-import 'package:weather_app/navigation/routes/app_routes.dart';
-import 'package:weather_app/widgets/auth/auth_background.dart';
+import 'package:stumili/core/secure_storage.dart';
+import 'package:stumili/navigation/routes/app_routes.dart';
+import 'package:stumili/widgets/auth/auth_background.dart';
 
 
 class SettingScreen extends StatelessWidget {

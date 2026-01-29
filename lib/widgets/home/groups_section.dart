@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:weather_app/widgets/home/horizontal.dart';
+import 'package:stumili/widgets/home/horizontal.dart';
 
 class GroupsSection extends StatelessWidget {
   final List groups;

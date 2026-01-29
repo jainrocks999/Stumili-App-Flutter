@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:weather_app/navigation/routes/app_routes.dart';
-import 'package:weather_app/screens/main/home/home_screen.dart';
-import 'package:weather_app/screens/main/libraries/library_screen.dart';
-import 'package:weather_app/screens/main/reminders/reminder.screen.dart';
-import 'package:weather_app/screens/main/settings/setting_screen.dart';
+import 'package:stumili/navigation/routes/app_routes.dart';
+import 'package:stumili/screens/main/home/home_screen.dart';
+import 'package:stumili/screens/main/libraries/library_screen.dart';
+import 'package:stumili/screens/main/reminders/reminder.screen.dart';
+import 'package:stumili/screens/main/settings/setting_screen.dart';
 
 class MainTabs extends StatefulWidget {
   const MainTabs({super.key});

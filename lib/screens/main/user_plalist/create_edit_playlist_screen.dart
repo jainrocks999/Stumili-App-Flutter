@@ -2,9 +2,9 @@ import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:weather_app/core/secure_storage.dart';
-import 'package:weather_app/services/api_service.dart';
-import 'package:weather_app/widgets/custom_button.dart';
+import 'package:stumili/core/secure_storage.dart';
+import 'package:stumili/services/api_service.dart';
+import 'package:stumili/widgets/custom_button.dart';
 
 class SavePlaylistScreen extends StatefulWidget {
   final bool isEdit;

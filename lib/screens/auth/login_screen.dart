@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:weather_app/core/fonts.dart';
-import 'package:weather_app/core/secure_storage.dart';
-import 'package:weather_app/navigation/routes/app_routes.dart';
-import 'package:weather_app/services/api_service.dart';
-import 'package:weather_app/widgets/auth/auth_background.dart';
-import 'package:weather_app/widgets/auth/input_field.dart';
-import 'package:weather_app/widgets/auth/intro.dart';
-import 'package:weather_app/widgets/custom_button.dart';
+import 'package:stumili/core/fonts.dart';
+import 'package:stumili/core/secure_storage.dart';
+import 'package:stumili/navigation/routes/app_routes.dart';
+import 'package:stumili/services/api_service.dart';
+import 'package:stumili/widgets/auth/auth_background.dart';
+import 'package:stumili/widgets/auth/input_field.dart';
+import 'package:stumili/widgets/auth/intro.dart';
+import 'package:stumili/widgets/custom_button.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -17,6 +17,9 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+
+  bool _obscurePassword = true;
+  bool _loading = false; // ✅ loader
 
   @override
   void dispose() {
@@ -29,11 +32,24 @@ class _LoginScreenState extends State<LoginScreen> {
     return RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(email);
   }
 
-  void _login() async {
+  void _showMessage(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message)),
+    );
+  }
+
+  void navigateToHome() {
+    Navigator.pushNamed(context, AppRoutes.welcome);
+  }
+
+  Future<void> _login() async {
+    if (_loading) return;
+
     FocusScope.of(context).unfocus();
 
     final email = _emailController.text.trim();
     final password = _passwordController.text.trim();
+
     if (!_isValidEmail(email)) {
       _showMessage("Enter a valid email address");
       return;
@@ -49,6 +65,8 @@ class _LoginScreenState extends State<LoginScreen> {
       return;
     }
 
+    setState(() => _loading = true);
+
     try {
       final response = await ApiService.postRequest(
         '/login',
@@ -57,104 +75,141 @@ class _LoginScreenState extends State<LoginScreen> {
           'password': password,
           'fcm_token': "fcm_tokenssssssss",
         },
+        headers: {'Accept': 'application/json'},
       );
+
       final data = response.data?['data'];
-      if (data != null && data['id'] != null && data['token'] != null) {
-        await SecureStore.saveUser(data['id'].toString(), data['token']);
+
+      // ✅ defensive: token + id
+      final userId = data?['id'];
+      final token = data?['token'];
+
+      if (userId != null && token != null) {
+        await SecureStore.saveUser(userId.toString(), token.toString());
       }
-      navigateToHome();
+
+      if (!mounted) return;
+
       _showMessage("Login Successful");
+      navigateToHome();
     } catch (err) {
+      if (!mounted) return;
       _showMessage("Login failed");
+    } finally {
+      if (!mounted) return;
+      setState(() => _loading = false);
     }
-  }
-
-  void navigateToHome() {
-    Navigator.pushNamed(context, AppRoutes.welcome);
-  }
-
-  void _showMessage(String message) {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
   @override
   Widget build(BuildContext context) {
     return AuthBackground(
-      child: SingleChildScrollView(
-        keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-        child: Padding(
-          padding: const EdgeInsets.all(25),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Intro(
-                title1: 'Welcome to',
-                title2: 'STUMILI',
-                title3: "Let's login here",
-              ),
-              Column(
+      child: Stack(
+        children: [
+          SingleChildScrollView(
+            keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+            child: Padding(
+              padding: const EdgeInsets.all(25),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  InputField(
-                    hintText: 'Email',
-                    keyboardType: TextInputType.emailAddress,
-                    controller: _emailController,
+                  const Intro(
+                    title1: 'Welcome to',
+                    title2: 'STUMILI',
+                    title3: "Let's login here",
                   ),
-                  InputField(
-                    hintText: 'Password',
-                    controller: _passwordController,
-                    obscureText: true,
-                    suffixIcon: Icon(
-                      Icons.remove_red_eye_outlined,
-                      color: Colors.grey,
+                  Column(
+                    children: [
+                      InputField(
+                        hintText: 'Email',
+                        keyboardType: TextInputType.emailAddress,
+                        controller: _emailController,
+                       
+                      ),
+
+                      InputField(
+                        hintText: 'Password',
+                        controller: _passwordController,
+                        obscureText: _obscurePassword,
+                       // ✅ disable while loading
+                        suffixIcon: InkWell(
+                          onTap: _loading
+                              ? null
+                              : () => setState(() {
+                                    _obscurePassword = !_obscurePassword;
+                                  }),
+                          child: Icon(
+                            _obscurePassword
+                                ? Icons.visibility_off_outlined
+                                : Icons.visibility_outlined,
+                            color: Colors.grey,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: Padding(
+                      padding: const EdgeInsets.only(right: 8, top: 6, bottom: 0),
+                      child: GestureDetector(
+                        onTap: _loading ? null : () {},
+                        child: Text(
+                          'Forgot Your Password?',
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: Colors.white,
+                            fontWeight: FontWeight.w500,
+                            fontFamily: AppFonts.medium,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  // ✅ button loader text + disable
+                  CustomButton(
+                    title: _loading ? "Logging in..." : "Login",
+                    onPress: _loading ? null : _login,
+                  ),
+
+                  const SizedBox(height: 50),
+                  Center(
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Text(
+                          "Dont have account?",
+                          style: TextStyle(color: Colors.white),
+                        ),
+                        GestureDetector(
+                          onTap: _loading
+                              ? null
+                              : () => Navigator.pushNamed(context, AppRoutes.signup),
+                          child: const Text(
+                            " Sign Up",
+                            style: TextStyle(color: Color(0xFFB72658)),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ],
               ),
-              Align(
-                alignment: Alignment.centerRight,
-                child: Padding(
-                  padding: EdgeInsets.only(right: 8, top: 6, bottom: 0),
-                  child: GestureDetector(
-                    onTap: () {},
-                    child: Text(
-                      'Forgot Your Password?',
-                      style: TextStyle(
-                        fontSize: 16,
-                        color: Colors.white,
-                        fontWeight: FontWeight.w500,
-                        fontFamily: AppFonts.medium,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              CustomButton(title: "Login", onPress: _login),
-              SizedBox(height: 50),
-              Center(
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      "Dont have account?",
-                      style: TextStyle(color: Colors.white),
-                    ),
-                    GestureDetector(
-                      onTap: () {
-                        Navigator.pushNamed(context, AppRoutes.signup);
-                      },
-                      child: Text(
-                        " Sign Up",
-                        style: TextStyle(color: Color(0xFFB72658)),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
+            ),
           ),
-        ),
+
+          // ✅ full screen loader overlay
+          if (_loading)
+            Positioned.fill(
+              child: Container(
+                color: Colors.black.withOpacity(0.35),
+                child: const Center(
+                  child: CircularProgressIndicator(),
+                ),
+              ),
+            ),
+        ],
       ),
     );
   }

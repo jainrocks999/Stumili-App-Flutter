@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:weather_app/core/helper.dart';
-import 'package:weather_app/core/playlist_action_handler.dart';
-import 'package:weather_app/navigation/routes/app_routes.dart';
-import 'package:weather_app/screens/main/user_plalist/edit_playlist_screen.dart';
-import 'package:weather_app/widgets/affirmation_menu_modal.dart';
-import 'package:weather_app/widgets/custom_button.dart';
+import 'package:stumili/core/helper.dart';
+import 'package:stumili/core/playlist_action_handler.dart';
+import 'package:stumili/navigation/routes/app_routes.dart';
+import 'package:stumili/screens/main/user_plalist/edit_playlist_screen.dart';
+import 'package:stumili/widgets/affirmation_menu_modal.dart';
+import 'package:stumili/widgets/custom_button.dart';
 
 class PlaylistDailtsScreen extends StatefulWidget {
   const PlaylistDailtsScreen({super.key});

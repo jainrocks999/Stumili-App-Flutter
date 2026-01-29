@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import 'package:weather_app/core/secure_storage.dart';
-import 'package:weather_app/services/api_service.dart';
-import 'package:weather_app/widgets/custom_button.dart';
+import 'package:stumili/core/secure_storage.dart';
+import 'package:stumili/services/api_service.dart';
+import 'package:stumili/widgets/custom_button.dart';
 
 class ReminderModal extends StatefulWidget {
   final Map<String, dynamic>? selectedReminder;

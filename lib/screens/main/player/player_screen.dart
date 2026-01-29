@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:weather_app/screens/main/player/settings_sheet.dart';
-import 'package:weather_app/widgets/affirmation_menu_modal.dart';
+import 'package:stumili/screens/main/player/settings_sheet.dart';
+import 'package:stumili/widgets/affirmation_menu_modal.dart';
 
 import 'player_controller.dart';
 import 'player_state.dart';

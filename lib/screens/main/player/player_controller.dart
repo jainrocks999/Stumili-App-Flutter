@@ -4,7 +4,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:just_audio/just_audio.dart' as ja;
-import 'package:weather_app/core/helper.dart';
+import 'package:stumili/core/helper.dart';
 
 import 'player_models.dart';
 import 'player_state.dart';

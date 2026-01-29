@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:weather_app/core/fonts.dart';
-import 'package:weather_app/models/affirmation_model.dart';
-import 'package:weather_app/navigation/routes/app_routes.dart';
-import 'package:weather_app/widgets/custom_button.dart';
+import 'package:stumili/core/fonts.dart';
+import 'package:stumili/models/affirmation_model.dart';
+import 'package:stumili/navigation/routes/app_routes.dart';
+import 'package:stumili/widgets/custom_button.dart';
 
 class WelcomeScreen extends StatefulWidget {
   const WelcomeScreen({super.key});

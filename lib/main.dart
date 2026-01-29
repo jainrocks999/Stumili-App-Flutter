@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:weather_app/navigation/routes/app_routes.dart';
-import 'package:weather_app/screens/main/player/player_controller.dart';
+import 'package:stumili/navigation/routes/app_routes.dart';
+import 'package:stumili/screens/main/player/player_controller.dart';
 
 void main() {
   runApp(

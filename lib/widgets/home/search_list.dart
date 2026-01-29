@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:weather_app/core/playlist_action_handler.dart';
-import 'package:weather_app/navigation/routes/app_routes.dart';
-import 'package:weather_app/screens/main/user_plalist/edit_playlist_screen.dart';
+import 'package:stumili/core/playlist_action_handler.dart';
+import 'package:stumili/navigation/routes/app_routes.dart';
+import 'package:stumili/screens/main/user_plalist/edit_playlist_screen.dart';
 
 class SearchList extends StatefulWidget {
   final List<dynamic> cate; // categories list
