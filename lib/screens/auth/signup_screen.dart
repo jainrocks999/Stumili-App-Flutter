@@ -144,8 +144,11 @@ class _SignUpScreenState extends State<SignUpScreen> {
         if (err is Map) {
           final msgs = <String>[];
           err.forEach((_, v) {
-            if (v is List) msgs.addAll(v.map((x) => x.toString()));
-            else msgs.add(v.toString());
+            if (v is List) {
+              msgs.addAll(v.map((x) => x.toString()));
+            } else {
+              msgs.add(v.toString());
+            }
           });
           _showMessage(msgs.join('\n'));
           return;

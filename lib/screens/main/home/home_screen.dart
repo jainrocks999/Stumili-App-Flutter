@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:stumili/core/app_colors.dart';
 import 'package:stumili/core/fonts.dart';
 import 'package:stumili/core/secure_storage.dart';
-// import 'package:stumili/models/affirmation_model.dart';
 import 'package:stumili/navigation/routes/app_routes.dart';
 import 'package:stumili/screens/main/player/mini_player_bar.dart';
 import 'package:stumili/services/api_service.dart';
@@ -162,6 +162,14 @@ class _HomeScreenState extends State<HomeScreen> {
       final data = response.data['data'];
       if (!mounted) return;
       hideLoader(context);
+        if (data == null || (data is List && data.isEmpty)) {
+      Fluttertoast.showToast(
+        msg: "Affirmation not available in this category",
+        toastLength: Toast.LENGTH_SHORT,
+        gravity: ToastGravity.BOTTOM,
+      );
+      return;
+    }
       Navigator.pushNamed(
         context,
         AppRoutes.playlistdailts,

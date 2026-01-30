@@ -1,0 +1,41 @@
+{
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "stimuli-59f10",
+          "appId": "1:796128426527:android:a0100469bc5e642a66332a",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "ios": {
+        "default": {
+          "projectId": "stimuli-59f10",
+          "appId": "1:796128426527:ios:174ff27c0cfd71c766332a",
+          "uploadDebugSymbols": false,
+          "fileOutput": "ios/Runner/GoogleService-Info.plist"
+        }
+      },
+      "macos": {
+        "default": {
+          "projectId": "stimuli-59f10",
+          "appId": "1:796128426527:ios:02824d092b3e74d566332a",
+          "uploadDebugSymbols": false,
+          "fileOutput": "macos/Runner/GoogleService-Info.plist"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "stimuli-59f10",
+          "configurations": {
+            "android": "1:796128426527:android:a0100469bc5e642a66332a",
+            "ios": "1:796128426527:ios:174ff27c0cfd71c766332a",
+            "macos": "1:796128426527:ios:02824d092b3e74d566332a",
+            "web": "1:796128426527:web:88bb58f5fdd21a5866332a",
+            "windows": "1:796128426527:web:5c8a94071df4d2d566332a"
+          }
+        }
+      }
+    }
+  }
+}

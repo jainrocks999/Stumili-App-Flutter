@@ -38,13 +38,16 @@ dependencies:
   cupertino_icons: ^1.0.8
   font_awesome_flutter: ^10.12.0
   provider: ^6.0.5
-  flutter_tts: ^3.8.5
-  just_audio: ^0.9.36
+  flutter_tts: ^4.2.5
+  just_audio: ^0.10.5
   image_picker: ^1.0.7
   flutter_switch: ^0.3.2
   fluttertoast: ^9.0.0
-  share_plus: ^7.2.1
+  share_plus: ^12.0.1
   url_launcher: ^6.2.4
+  firebase_core: ^4.4.0
+  firebase_messaging: ^16.1.1
+  permission_handler: ^12.0.1
 
 dev_dependencies:
   flutter_test:
