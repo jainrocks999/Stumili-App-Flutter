@@ -68,12 +68,13 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() => _loading = true);
 
     try {
+        final fcmToken = await SecureStore.getFcmToken();
       final response = await ApiService.postRequest(
         '/login',
         body: {
           'email': email,
           'password': password,
-          'fcm_token': "fcm_tokenssssssss",
+          'fcm_token':fcmToken?? "fcm_tokenssssssss",
         },
         headers: {'Accept': 'application/json'},
       );
@@ -96,7 +97,7 @@ class _LoginScreenState extends State<LoginScreen> {
       if (!mounted) return;
       _showMessage("Login failed");
     } finally {
-      if (!mounted) return;
+     
       setState(() => _loading = false);
     }
   }

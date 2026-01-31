@@ -5,6 +5,7 @@ class SecureStore {
 
   static const userId = "USER_ID";
   static const token = 'TOKEN';
+   static const _fcmKey = "fcm_token";
 
   // Save user info
   static Future<void> saveUser(String userIdValue, String tokenValue) async {
@@ -25,5 +26,16 @@ class SecureStore {
   // Logout
   static Future<void> logout() async {
     await _storage.deleteAll();
+  }
+
+ 
+
+  static Future<void> saveFcmToken(String token) async {
+    // flutter_secure_storage / shared_preferences jo use kar rahe ho usme save
+    await _storage.write(key: _fcmKey, value: token);
+  }
+
+  static Future<String?> getFcmToken() async {
+    return await _storage.read(key: _fcmKey);
   }
 }
