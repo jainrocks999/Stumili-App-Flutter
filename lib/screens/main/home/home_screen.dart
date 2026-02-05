@@ -93,6 +93,7 @@ class _HomeScreenState extends State<HomeScreen> {
         queryParameters: {'user_id': userId},
       );
       final data = response.data['data'];
+      debugPrint("thtititi$data");
       setState(() {
         categories = data;
       });

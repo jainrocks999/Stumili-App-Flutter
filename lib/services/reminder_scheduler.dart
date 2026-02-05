@@ -15,7 +15,8 @@ class ReminderScheduler {
     required List<String> days,
     required String startTime, // HH:mm
     required String endTime, // HH:mm
-    required int frequency, // how many notifications between start–end
+    required int frequency,
+    required int categoryId, // how many notifications between start–end
   }) async {
     if (frequency <= 0) return;
 
@@ -43,10 +44,6 @@ class ReminderScheduler {
       ),
     );
 
- 
-
-    
-
     int idOffset = 0;
 
     for (final day in days) {
@@ -61,26 +58,25 @@ class ReminderScheduler {
           t.hour,
           t.minute,
         );
-
+        final payload = "category_id=$categoryId&reminder_id=$reminderId";
         while (scheduled.weekday != weekday || scheduled.isBefore(now)) {
           scheduled = scheduled.add(const Duration(days: 1));
         }
-  await _plugin.zonedSchedule(
-          id: reminderId+idOffset,
+        await _plugin.zonedSchedule(
+          id: reminderId + idOffset,
           title: title,
           body: body,
           scheduledDate: tz.TZDateTime.from(scheduled, tz.local),
           notificationDetails: details,
           androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
           matchDateTimeComponents: DateTimeComponents.dayOfWeekAndTime,
+          payload: payload,
         );
-
-      
 
         idOffset++;
       }
     }
-   checkScheduledReminders();
+    checkScheduledReminders();
   }
 
   /// CANCEL ALL NOTIFICATIONS OF THIS REMINDER
@@ -123,15 +119,13 @@ class ReminderScheduler {
   }
 
   static Future<void> checkScheduledReminders() async {
-  final pending =
-      await ReminderScheduler._plugin.pendingNotificationRequests();
+    final pending = await ReminderScheduler._plugin
+        .pendingNotificationRequests();
 
-  debugPrint('Total scheduled notifications: ${pending.length}');
+    debugPrint('Total scheduled notifications: ${pending.length}');
 
-  for (final n in pending) {
-    debugPrint(
-      'ID: ${n.id}, Title: ${n.title}, Body: ${n.body}',
-    );
+    for (final n in pending) {
+      debugPrint('ID: ${n.id}, Title: ${n.title}, Body: ${n.body}');
+    }
   }
-}
 }
