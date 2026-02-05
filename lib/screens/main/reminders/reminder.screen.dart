@@ -4,6 +4,7 @@ import 'package:stumili/screens/main/reminders/reminder_modal.dart';
 import 'package:stumili/services/api_service.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:flutter_switch/flutter_switch.dart';
+import 'package:stumili/services/reminder_scheduler.dart';
 import 'package:stumili/widgets/custom_button.dart';
 
 class ReminderScreen extends StatefulWidget {
@@ -34,6 +35,8 @@ class _ReminderScreenState extends State<ReminderScreen> {
       );
 
       if (response.data['status'] == true) {
+        final data=response.data['data'];
+        debugPrint("rndednddn$data");
         reminders = List<Map<String, dynamic>>.from(response.data['data']);
       } else {
         Fluttertoast.showToast(msg: "No reminders found");
@@ -45,38 +48,83 @@ class _ReminderScreenState extends State<ReminderScreen> {
     }
   }
 
-  Future<void> deleteReminder(String id) async {
-    try {
-      final userId = await SecureStore.getUserId();
-      final response = await ApiService.getRequest(
-        "/reminderDelete",
-        queryParameters: {"user_id": userId, "reminder_id": id},
-      );
+Future<void> deleteReminder(String id,dynamic item) async {
+  try {
+     final int frequency =
+    int.tryParse(item["repeat"].toString()) ?? 1;
+    // ✅ cancel notifications first
+    final int notifBaseId = (int.parse(id) % 2147483647);
+    await ReminderScheduler.cancelReminder(reminderId: notifBaseId, daysCount: 7,frequency:frequency );
 
-      if (response.data['status'] == true) {
-        fetchReminders();
-      }
-    } catch (_) {
-      Fluttertoast.showToast(msg: "Error deleting reminder");
-    }
-  }
+    final userId = await SecureStore.getUserId();
+    final response = await ApiService.getRequest(
+      "/reminderDelete",
+      queryParameters: {"user_id": userId, "reminder_id": id},
+    );
 
-  Future<void> toggleReminder(Map<String, dynamic> item, int index) async {
-    try {
-      setState(() => toggleLoadingIndex = index);
-      await ApiService.postRequest(
-        "/createReminder",
-        body: {
-          ...item,
-          "reminder_id": item['id'],
-          "r_status": item['r_status'] == 1 ? 0 : 1,
-        },
-      );
-      await fetchReminders();
-    } finally {
-      setState(() => toggleLoadingIndex = -1);
+    if (response.data['status'] == true) {
+      fetchReminders();
     }
+  } catch (e) {
+    debugPrint("DELETE NOTI ERROR: $e");
+    Fluttertoast.showToast(msg: "Error deleting reminder");
   }
+}
+
+Future<void> toggleReminder(Map<String, dynamic> item, int index) async {
+  try {
+    setState(() => toggleLoadingIndex = index);
+
+    final newStatus = item['r_status'] == 1 ? 0 : 1;
+
+    // ✅ API update (keep server id)
+    await ApiService.postRequest(
+      "/createReminder",
+      body: {
+        ...item,
+        "reminder_id": item['id'],
+        "r_status": newStatus,
+      },
+    );
+
+    // ✅ Notification id (int32 safe)
+    final int notifBaseId =
+        (int.parse(item['id'].toString()) % 2147483647);
+        final int frequency =
+    int.tryParse(item["repeat"].toString()) ?? 1;
+
+    // Cancel old notifications (always)
+    await ReminderScheduler.cancelReminder(
+      reminderId: notifBaseId,
+      daysCount: 7,
+      frequency: frequency
+    );
+
+    // Schedule again ONLY if turned ON
+    if (newStatus == 1) {
+      final days = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
+      final selectedDays = days.where((d) => item[d] == 1).toList();
+
+      await ReminderScheduler.scheduleReminder(
+        reminderId: notifBaseId,
+        title: item['title'] ?? 'Reminder',
+        body: item['description'] ?? '',
+        days: selectedDays,
+        startTime: item['start_at'].split(' ')[1].substring(0, 5),
+        endTime: item['end_at'].split(' ')[1].substring(0, 5),
+      frequency:frequency
+      );
+    }
+
+    await fetchReminders();
+  } catch (e) {
+    debugPrint("TOGGLE NOTI ERROR: $e");
+    Fluttertoast.showToast(msg: "Toggle failed");
+  } finally {
+    setState(() => toggleLoadingIndex = -1);
+  }
+}
+
 
   String getTimeRange(String? start, String? end) {
     if (start == null || end == null) return "Invalid time";
@@ -147,7 +195,7 @@ class _ReminderScreenState extends State<ReminderScreen> {
                           top: 0,
                           right: 0,
                           child: GestureDetector(
-                            onTap: () => deleteReminder(item['id'].toString()),
+                            onTap: () => deleteReminder(item['id'].toString(),item),
                             child: Container(
                               height: 20,
                               width: 20,

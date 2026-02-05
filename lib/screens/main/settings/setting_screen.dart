@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:stumili/services/onesignal_service.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:stumili/core/secure_storage.dart';
 import 'package:stumili/navigation/routes/app_routes.dart';
@@ -60,6 +61,7 @@ class SettingScreen extends StatelessWidget {
 
     if (confirm == true) {
       await SecureStore.logout();
+      await OneSignalService.logout();
       if (context.mounted) {
         Navigator.pushNamedAndRemoveUntil(
           context,

@@ -3,6 +3,7 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:stumili/core/secure_storage.dart';
 import 'package:stumili/services/api_service.dart';
 import 'package:stumili/widgets/custom_button.dart';
+import 'package:stumili/services/reminder_scheduler.dart';
 
 class ReminderModal extends StatefulWidget {
   final Map<String, dynamic>? selectedReminder;
@@ -85,37 +86,110 @@ class _ReminderModalState extends State<ReminderModal> {
     });
   }
 
-  Future<void> _submit() async {
-    if (selectedDays.isEmpty) {
-      Fluttertoast.showToast(msg: "Please select any day");
-      return;
-    }
+  // Future<void> _submit() async {
+  //   if (selectedDays.isEmpty) {
+  //     Fluttertoast.showToast(msg: "Please select any day");
+  //     return;
+  //   }
 
-    final userId = await SecureStore.getUserId();
-    final date = DateTime.now().toIso8601String().split('T')[0];
+  //   final userId = await SecureStore.getUserId();
+  //   final date = DateTime.now().toIso8601String().split('T')[0];
 
-    final body = {
-      "user_id": userId,
-      "repeat": repeat,
-      "start_at": "$date $startTime:00",
-      "end_at": "$date $endTime:00",
-      "r_status": 1,
-      "reminder_id": widget.selectedReminder?['id'] ?? 0,
-      for (final d in days) d['id']!: selectedDays.contains(d['id']) ? 1 : 0,
-    };
+  //   final body = {
+  //     "user_id": userId,
+  //     "repeat": repeat,
+  //     "start_at": "$date $startTime:00",
+  //     "end_at": "$date $endTime:00",
+  //     "r_status": 1,
+  //     "reminder_id": widget.selectedReminder?['id'] ?? 0,
+  //     for (final d in days) d['id']!: selectedDays.contains(d['id']) ? 1 : 0,
+  //   };
 
-    await ApiService.postRequest("/createReminder", body: body);
+  //   await ApiService.postRequest("/createReminder", body: body);
 
-    Fluttertoast.showToast(
-      msg: widget.selectedReminder == null
-          ? "Reminder Created!"
-          : "Reminder Updated!",
-    );
-    if (!mounted) {
-      return;
-    }
-    Navigator.pop(context, true);
+  //   Fluttertoast.showToast(
+  //     msg: widget.selectedReminder == null
+  //         ? "Reminder Created!"
+  //         : "Reminder Updated!",
+  //   );
+  //   if (!mounted) {
+  //     return;
+  //   }
+  //   Navigator.pop(context, true);
+  // }
+  int generateSafeId() {
+  return DateTime.now().millisecondsSinceEpoch % 2147483647;
+}
+
+ Future<void> _submit() async {
+  if (selectedDays.isEmpty) {
+    Fluttertoast.showToast(msg: "Please select any day");
+    return;
   }
+
+  final userId = await SecureStore.getUserId();
+  final date = DateTime.now().toIso8601String().split('T')[0];
+
+  // ✅ API reminder_id: create = 0, update = existing id
+  final apiReminderId = widget.selectedReminder?['id'] ?? 0;
+
+  final body = {
+    "user_id": userId,
+    "repeat": repeat,
+    "start_at": "$date $startTime:00",
+    "end_at": "$date $endTime:00",
+    "r_status": 1,
+    "reminder_id": apiReminderId, // ✅ IMPORTANT
+    for (final d in days) d['id']!: selectedDays.contains(d['id']) ? 1 : 0,
+  };
+
+  final response = await ApiService.postRequest("/createReminder", body: body);
+
+  // ✅ Now get the real id from API response (depends on your backend response shape)
+  // Try these common paths:
+  final createdId =
+      response.data?['data']?['id'] ??
+      response.data?['id'] ??
+      apiReminderId;
+
+  // If still 0, then backend didn't return id -> best: refetch list after pop (but schedule needs id)
+  if (createdId == 0 || createdId == null) {
+    Fluttertoast.showToast(msg: "Saved, but ID missing for scheduling");
+    if (!mounted) return;
+    Navigator.pop(context, true);
+    return;
+  }
+
+  // ✅ Local notifications base id must be int32
+  final int notifBaseId = int.parse(createdId.toString()) % 2147483647;
+
+  try {
+    // Cancel old notifications for this reminder
+    await ReminderScheduler.cancelReminder(reminderId: notifBaseId,daysCount: 7,frequency:repeat );
+
+    // Schedule new ones
+    await ReminderScheduler.scheduleReminder(
+      reminderId: notifBaseId,
+      title: "Affirmation",
+      body: "Time for your affirmation",
+      days: selectedDays.toList(),
+      startTime: startTime,
+      endTime: endTime,
+      frequency: repeat
+    );
+  } catch (e) {
+    debugPrint("NOTI ERROR: $e");
+  }
+
+  Fluttertoast.showToast(
+    msg: widget.selectedReminder == null ? "Reminder Created!" : "Reminder Updated!",
+  );
+
+  if (!mounted) return;
+  Navigator.pop(context, true);
+}
+
+
 
   @override
   Widget build(BuildContext context) {
@@ -196,46 +270,48 @@ class _ReminderModalState extends State<ReminderModal> {
           const Divider(color: Color(0xFF333333)),
           const SizedBox(height: 15),
 
-          Column(
-            children: [
-              Center(
-                child: Text(
-                  "Reapet",
-                  style: TextStyle(color: Colors.white, fontSize: 18),
+          SingleChildScrollView(
+            child: Column(
+              children: [
+                Center(
+                  child: Text(
+                    "Reapet",
+                    style: TextStyle(color: Colors.white, fontSize: 18),
+                  ),
                 ),
-              ),
-              const SizedBox(height: 15),
-              Wrap(
-                spacing: 10,
-                children: days.map((d) {
-                  final active = selectedDays.contains(d['id']);
-                  return GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        active
-                            ? selectedDays.remove(d['id'])
-                            : selectedDays.add(d['id']!);
-                      });
-                    },
-                    child: CircleAvatar(
-                      radius: 22,
-                      backgroundColor: active
-                          ? const Color(0xFFB72658)
-                          : Colors.white,
-                      child: Text(
-                        d['label']!,
-                        style: TextStyle(
-                          color: active
-                              ? Colors.white
-                              : const Color(0xFFB72658),
-                          fontWeight: FontWeight.bold,
+                const SizedBox(height: 15),
+                Wrap(
+                  spacing: 10,
+                  children: days.map((d) {
+                    final active = selectedDays.contains(d['id']);
+                    return GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          active
+                              ? selectedDays.remove(d['id'])
+                              : selectedDays.add(d['id']!);
+                        });
+                      },
+                      child: CircleAvatar(
+                        radius: 22,
+                        backgroundColor: active
+                            ? const Color(0xFFB72658)
+                            : Colors.white,
+                        child: Text(
+                          d['label']!,
+                          style: TextStyle(
+                            color: active
+                                ? Colors.white
+                                : const Color(0xFFB72658),
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
-                    ),
-                  );
-                }).toList(),
-              ),
-            ],
+                    );
+                  }).toList(),
+                ),
+              ],
+            ),
           ),
 
           const Spacer(),

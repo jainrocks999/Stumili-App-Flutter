@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:stumili/core/helper.dart';
 import 'package:stumili/core/playlist_action_handler.dart';
+import 'package:stumili/core/secure_storage.dart';
 import 'package:stumili/navigation/routes/app_routes.dart';
 import 'package:stumili/screens/main/user_plalist/edit_playlist_screen.dart';
+import 'package:stumili/services/api_service.dart';
 import 'package:stumili/widgets/affirmation_menu_modal.dart';
 import 'package:stumili/widgets/custom_button.dart';
 
@@ -15,15 +17,32 @@ class PlaylistDailtsScreen extends StatefulWidget {
 
 class _PlaylistDailtsScreenState extends State<PlaylistDailtsScreen> {
   bool isFavorite = false;
-
+  bool _loadedOnce = false;
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+     if (_loadedOnce) return;
+    _loadedOnce = true;
     final args =
         ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
     final category = args['category'];
+    final cagteGoriesId = category['id'];
+    lastSesstionUpdate(cagteGoriesId);
 
     isFavorite = category['is_favorite'] ?? false;
+  }
+
+
+  void lastSesstionUpdate(dynamic cagteGoriesId) async {
+    try {
+      final userId = await SecureStore.getUserId();
+      final data = {"user_id": userId, "category_id": cagteGoriesId};
+      final resposne=await ApiService.postRequest("/playList/LastSessionUpdate", body: data);
+      final res=resposne.data;
+      debugPrint('titititi$res $cagteGoriesId');
+    } catch (err) {
+      debugPrint("titititi$err");
+    }
   }
 
   @override
@@ -33,7 +52,7 @@ class _PlaylistDailtsScreenState extends State<PlaylistDailtsScreen> {
         ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
     final affirmations = args['affirmation'];
     final category = args['category'];
-    final isDefault = args['isDefault']??false;
+    final isDefault = args['isDefault'] ?? false;
     final String title = category["categories_name"] ?? "Believe in Yourself";
     final String imageUrl =
         category["caetgory_images"] ??

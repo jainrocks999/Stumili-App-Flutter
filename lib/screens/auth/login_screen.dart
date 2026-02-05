@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:stumili/core/fonts.dart';
 import 'package:stumili/core/secure_storage.dart';
 import 'package:stumili/navigation/routes/app_routes.dart';
+import 'package:stumili/screens/auth/forgot_password_screen.dart';
 import 'package:stumili/services/api_service.dart';
+import 'package:stumili/services/onesignal_service.dart';
 import 'package:stumili/widgets/auth/auth_background.dart';
 import 'package:stumili/widgets/auth/input_field.dart';
 import 'package:stumili/widgets/auth/intro.dart';
@@ -33,13 +35,39 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   void _showMessage(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message)),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
   void navigateToHome() {
     Navigator.pushNamed(context, AppRoutes.welcome);
+  }
+
+   void _clearInputs() {
+    _emailController.clear();
+    _passwordController.clear();
+    // optional: cursor reset / rebuild
+    setState(() {});
+  }
+
+  void _goToForgot() {
+    if (_loading) return;
+    FocusScope.of(context).unfocus();
+    _clearInputs();
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const ForgotPasswordScreen()),
+    );
+  }
+
+  void _goToSignup() {
+    if (_loading) return;
+    FocusScope.of(context).unfocus();
+    _clearInputs();
+
+    Navigator.pushNamed(context, AppRoutes.signup);
   }
 
   Future<void> _login() async {
@@ -68,13 +96,13 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() => _loading = true);
 
     try {
-        final fcmToken = await SecureStore.getFcmToken();
+      final fcmToken = await SecureStore.getFcmToken();
       final response = await ApiService.postRequest(
         '/login',
         body: {
           'email': email,
           'password': password,
-          'fcm_token':fcmToken?? "fcm_tokenssssssss",
+          'fcm_token': fcmToken ?? "fcm_tokenssssssss",
         },
         headers: {'Accept': 'application/json'},
       );
@@ -87,6 +115,9 @@ class _LoginScreenState extends State<LoginScreen> {
 
       if (userId != null && token != null) {
         await SecureStore.saveUser(userId.toString(), token.toString());
+        Future.microtask(() async {
+          await OneSignalService.init();
+        });
       }
 
       if (!mounted) return;
@@ -97,7 +128,6 @@ class _LoginScreenState extends State<LoginScreen> {
       if (!mounted) return;
       _showMessage("Login failed");
     } finally {
-     
       setState(() => _loading = false);
     }
   }
@@ -125,20 +155,19 @@ class _LoginScreenState extends State<LoginScreen> {
                         hintText: 'Email',
                         keyboardType: TextInputType.emailAddress,
                         controller: _emailController,
-                       
                       ),
 
                       InputField(
                         hintText: 'Password',
                         controller: _passwordController,
                         obscureText: _obscurePassword,
-                       // ✅ disable while loading
+                        // ✅ disable while loading
                         suffixIcon: InkWell(
                           onTap: _loading
                               ? null
                               : () => setState(() {
-                                    _obscurePassword = !_obscurePassword;
-                                  }),
+                                  _obscurePassword = !_obscurePassword;
+                                }),
                           child: Icon(
                             _obscurePassword
                                 ? Icons.visibility_off_outlined
@@ -152,9 +181,15 @@ class _LoginScreenState extends State<LoginScreen> {
                   Align(
                     alignment: Alignment.centerRight,
                     child: Padding(
-                      padding: const EdgeInsets.only(right: 8, top: 6, bottom: 0),
+                      padding: const EdgeInsets.only(
+                        right: 8,
+                        top: 6,
+                        bottom: 0,
+                      ),
                       child: GestureDetector(
-                        onTap: _loading ? null : () {},
+                        onTap: _loading
+                            ? null
+                            : _goToForgot,
                         child: Text(
                           'Forgot Your Password?',
                           style: TextStyle(
@@ -186,7 +221,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         GestureDetector(
                           onTap: _loading
                               ? null
-                              : () => Navigator.pushNamed(context, AppRoutes.signup),
+                              : _goToSignup,
                           child: const Text(
                             " Sign Up",
                             style: TextStyle(color: Color(0xFFB72658)),
@@ -205,9 +240,7 @@ class _LoginScreenState extends State<LoginScreen> {
             Positioned.fill(
               child: Container(
                 color: Colors.black.withOpacity(0.35),
-                child: const Center(
-                  child: CircularProgressIndicator(),
-                ),
+                child: const Center(child: CircularProgressIndicator()),
               ),
             ),
         ],

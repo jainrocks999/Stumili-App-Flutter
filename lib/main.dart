@@ -1,42 +1,26 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:stumili/core/secure_storage.dart';
 
 import 'package:stumili/navigation/routes/app_routes.dart';
 import 'package:stumili/screens/main/player/player_controller.dart';
+import 'package:stumili/services/local_reminder_service.dart';
+import 'package:stumili/services/onesignal_service.dart';
 import 'firebase_options.dart';
 
-// NEW
-import 'package:stumili/services/push_notification_service.dart';
+final GlobalKey<NavigatorState> navigatorKey =
+    GlobalKey<NavigatorState>();
 
-final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
-
-void main() async {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
 
-  // Init push notifications (Android)
-  await PushNotificationService.instance.init(
-    onToken: (token)async {
-       await SecureStore.saveFcmToken(token); // 
-      debugPrint("FCM TOKEN: $token");
-    },
-    onNotificationTap: (data) {
-  
-      // Example: if data has route
-      final route = data['route']?.toString();
-      if (route != null && route.isNotEmpty) {
-        navigatorKey.currentState?.pushNamed(route, arguments: data);
-      } else {
-        // fallback: open splash/home
-        // navigatorKey.currentState?.pushNamed(AppRoutes.splash);
-      }
-    },
-  );
+  // ✅ MUST await
+  await LocalReminderService.init();
 
   runApp(
     MultiProvider(
@@ -46,6 +30,11 @@ void main() async {
       child: const MyApp(),
     ),
   );
+
+  // ✅ Push init AFTER UI
+  Future.microtask(() async {
+    await OneSignalService.init();
+  });
 }
 
 class MyApp extends StatelessWidget {
@@ -54,7 +43,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      navigatorKey: navigatorKey, // IMPORTANT for tap navigation
+      navigatorKey: navigatorKey,
       debugShowCheckedModeBanner: false,
       title: "Auth App",
       initialRoute: AppRoutes.splash,

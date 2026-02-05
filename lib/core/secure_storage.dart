@@ -5,7 +5,8 @@ class SecureStore {
 
   static const userId = "USER_ID";
   static const token = 'TOKEN';
-   static const _fcmKey = "fcm_token";
+  static const _fcmKey = "fcm_token";
+  static const _kOneSignalId = "onesignal_id";
 
   // Save user info
   static Future<void> saveUser(String userIdValue, String tokenValue) async {
@@ -28,8 +29,6 @@ class SecureStore {
     await _storage.deleteAll();
   }
 
- 
-
   static Future<void> saveFcmToken(String token) async {
     // flutter_secure_storage / shared_preferences jo use kar rahe ho usme save
     await _storage.write(key: _fcmKey, value: token);
@@ -37,5 +36,14 @@ class SecureStore {
 
   static Future<String?> getFcmToken() async {
     return await _storage.read(key: _fcmKey);
+  }
+
+  static Future<void> saveOneSignalId(String id) async {
+    // apne secure storage logic ke hisaab se
+    await _storage.write(key: _kOneSignalId, value: id);
+  }
+
+  static Future<String?> getOneSignalId() async {
+    return _storage.read(key: _kOneSignalId);
   }
 }
