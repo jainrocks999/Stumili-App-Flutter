@@ -8,6 +8,10 @@
         android:label="Stimuli"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
+          <meta-data
+               android:name="com.google.android.gms.ads.APPLICATION_ID"
+               android:value="ca-app-pub-6121378252341914~7691718918"
+              />  
         <activity
             android:name=".MainActivity"
             android:exported="true"

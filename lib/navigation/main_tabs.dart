@@ -1,4 +1,7 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:stumili/ads/ad_manager.dart';
 import 'package:stumili/navigation/routes/app_routes.dart';
 import 'package:stumili/screens/main/home/home_screen.dart';
 import 'package:stumili/screens/main/libraries/library_screen.dart';
@@ -77,7 +80,12 @@ class _MainTabsState extends State<MainTabs> {
                 image: 'assets/images/music.jpg',
                 title: 'Create your playlist',
                 onTap: () {
-                  Navigator.pushNamed(context, AppRoutes.selectaffirmation);
+                  AdManager.interstitail.showAd(
+                    onAdDismissed: () {
+                      if (!context.mounted) return;
+                      Navigator.pushNamed(context, AppRoutes.selectaffirmation);
+                    },
+                  );
                 },
               ),
             ],
@@ -97,7 +105,7 @@ class _MainTabsState extends State<MainTabs> {
         alignment: Alignment.center,
         children: [
           Container(
-            height: 90,
+            height: Platform.isIOS ? 120 : 90,
             decoration: const BoxDecoration(
               color: Colors.black,
               borderRadius: BorderRadius.vertical(top: Radius.circular(20)),

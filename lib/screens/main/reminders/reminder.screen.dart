@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:stumili/ads/ad_manager.dart';
+import 'package:stumili/ads/banner_ad.dart';
 import 'package:stumili/core/secure_storage.dart';
 import 'package:stumili/screens/main/reminders/reminder_modal.dart';
 import 'package:stumili/services/api_service.dart';
@@ -186,129 +188,148 @@ class _ReminderScreenState extends State<ReminderScreen> {
                 final selectedDays = days.where((d) => item[d] == 1).toList();
 
                 return GestureDetector(
-                  onTap: () async {
-                    final updated = await showModalBottomSheet(
-                      context: context,
-                      isScrollControlled: true,
-                      backgroundColor: Colors.transparent,
-                      builder: (_) => ReminderModal(selectedReminder: item),
+                  onTap: () {
+                    AdManager.interstitail.showAd(
+                      onAdDismissed: () async {
+                        if (!context.mounted) return;
+                        final updated = await showModalBottomSheet(
+                          context: context,
+                          isScrollControlled: true,
+                          backgroundColor: Colors.transparent,
+                          builder: (_) => ReminderModal(selectedReminder: item),
+                        );
+
+                        if (updated == true) {
+                          fetchReminders();
+                        }
+                      },
                     );
-
-                    if (updated == true) {
-                      fetchReminders();
-                    }
                   },
-                  child: Container(
-                    height: 90,
-                    width: width * 0.9,
-                    margin: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 8,
-                    ),
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF4A4949),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Stack(
-                      children: [
-                        /// Close Button
-                        Positioned(
-                          top: 0,
-                          right: 0,
-                          child: GestureDetector(
-                            onTap: () =>
-                                deleteReminder(item['id'].toString(), item),
-                            child: Container(
-                              height: 20,
-                              width: 20,
-                              decoration: BoxDecoration(
-                                color: Colors.grey.shade300,
-                                shape: BoxShape.circle,
-                              ),
-                              child: const Icon(
-                                Icons.close,
-                                size: 12,
-                                color: Colors.black,
-                              ),
-                            ),
-                          ),
+                  child: Column(
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        child: BannerAdSection(
+                          height: MediaQuery.of(context).size.width * 0.15,
                         ),
-
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                      ),
+                      Container(
+                        height: 90,
+                        width: width * 0.9,
+                        margin: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 8,
+                        ),
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF4A4949),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Stack(
                           children: [
-                            /// Title & Time
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  item['title'] ?? "Daily Practice",
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w600,
+                            /// Close Button
+                            Positioned(
+                              top: 0,
+                              right: 0,
+                              child: GestureDetector(
+                                onTap: () =>
+                                    deleteReminder(item['id'].toString(), item),
+                                child: Container(
+                                  height: 20,
+                                  width: 20,
+                                  decoration: BoxDecoration(
+                                    color: Colors.grey.shade300,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: const Icon(
+                                    Icons.close,
+                                    size: 12,
+                                    color: Colors.black,
                                   ),
                                 ),
-                                Padding(
-                                  padding: const EdgeInsets.only(right: 33),
-                                  child: Text(
-                                    getTimeRange(
-                                      item['start_at'],
-                                      item['end_at'],
-                                    ),
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 13,
-                                    ),
-                                  ),
-                                ),
-                              ],
+                              ),
                             ),
 
-                            const Spacer(),
-
-                            /// Frequency & Toggle
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text(
-                                  "${item['repeat']}X ${selectedDays.length == 7 ? 'Every Day' : selectedDays.join(', ')}",
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 13,
-                                  ),
-                                ),
-                                toggleLoadingIndex == index
-                                    ? const SizedBox(
-                                        height: 18,
-                                        width: 18,
-                                        child: CircularProgressIndicator(
-                                          strokeWidth: 2,
-                                          color: Color(0xFFB72658),
-                                        ),
-                                      )
-                                    : FlutterSwitch(
-                                        width: 46,
-                                        height: 22,
-                                        toggleSize: 18,
-                                        value: item['r_status'] == 1,
-                                        borderRadius: 30,
-                                        padding: 2,
-                                        activeColor: Colors.grey.shade300,
-                                        toggleColor: const Color(0xFFB72658),
-                                        inactiveToggleColor: const Color(
-                                          0xFF191919,
-                                        ),
-                                        onToggle: (_) =>
-                                            toggleReminder(item, index),
+                                /// Title & Time
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(
+                                      item['title'] ?? "Daily Practice",
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w600,
                                       ),
+                                    ),
+                                    Padding(
+                                      padding: const EdgeInsets.only(right: 33),
+                                      child: Text(
+                                        getTimeRange(
+                                          item['start_at'],
+                                          item['end_at'],
+                                        ),
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 13,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+
+                                const Spacer(),
+
+                                /// Frequency & Toggle
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(
+                                      "${item['repeat']}X ${selectedDays.length == 7 ? 'Every Day' : selectedDays.join(', ')}",
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 13,
+                                      ),
+                                    ),
+                                    toggleLoadingIndex == index
+                                        ? const SizedBox(
+                                            height: 18,
+                                            width: 18,
+                                            child: CircularProgressIndicator(
+                                              strokeWidth: 2,
+                                              color: Color(0xFFB72658),
+                                            ),
+                                          )
+                                        : FlutterSwitch(
+                                            width: 46,
+                                            height: 22,
+                                            toggleSize: 18,
+                                            value: item['r_status'] == 1,
+                                            borderRadius: 30,
+                                            padding: 2,
+                                            activeColor: Colors.grey.shade300,
+                                            toggleColor: const Color(
+                                              0xFFB72658,
+                                            ),
+                                            inactiveToggleColor: const Color(
+                                              0xFF191919,
+                                            ),
+                                            onToggle: (_) =>
+                                                toggleReminder(item, index),
+                                          ),
+                                  ],
+                                ),
                               ],
                             ),
                           ],
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                 );
               },
@@ -318,15 +339,18 @@ class _ReminderScreenState extends State<ReminderScreen> {
         child: CustomButton(
           title: "Create Reminder",
           height: 55,
-          onPress: () async {
-            final updated = await showModalBottomSheet(
-              context: context,
-              isScrollControlled: true,
-              backgroundColor: Colors.transparent,
-              builder: (_) => const ReminderModal(),
+          onPress: () {
+            AdManager.interstitail.showAd(
+              onAdDismissed: () async {
+                final updated = await showModalBottomSheet(
+                  context: context,
+                  isScrollControlled: true,
+                  backgroundColor: Colors.transparent,
+                  builder: (_) => const ReminderModal(),
+                );
+                if (updated == true) fetchReminders();
+              },
             );
-
-            if (updated == true) fetchReminders();
           },
         ),
       ),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:stumili/ads/banner_ad.dart';
 import 'package:stumili/core/secure_storage.dart';
 import 'package:stumili/navigation/routes/app_routes.dart';
 import 'package:stumili/screens/main/libraries/category_menu_modal.dart';
@@ -213,7 +214,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
       );
 
       final data = response.data["data"];
-    if (mounted && data != null && data is List && data.isNotEmpty)  {
+      if (mounted && data != null && data is List && data.isNotEmpty) {
         Navigator.pushNamed(
           context,
           AppRoutes.playlistdailts,
@@ -226,11 +227,10 @@ class _LibraryScreenState extends State<LibraryScreen> {
             "isDefault": true,
           },
         );
-      }else{
-          Fluttertoast.showToast(msg: "No Liked affirmation!");
+      } else {
+        Fluttertoast.showToast(msg: "No Liked affirmation!");
       }
     } catch (errr) {
-  
       Fluttertoast.showToast(msg: "Something went wrong");
     }
   }
@@ -271,6 +271,11 @@ class _LibraryScreenState extends State<LibraryScreen> {
           ),
 
           _likedAffirmationCard(),
+
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 15),
+            child: BannerAdSection(height: MediaQuery.of(context).size.width * 0.15),
+          ),
 
           const Padding(
             padding: EdgeInsets.all(16),

@@ -1,5 +1,8 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:stumili/ads/banner_ad.dart';
 import 'package:stumili/core/app_colors.dart';
 import 'package:stumili/core/fonts.dart';
 import 'package:stumili/core/secure_storage.dart';
@@ -163,14 +166,14 @@ class _HomeScreenState extends State<HomeScreen> {
       final data = response.data['data'];
       if (!mounted) return;
       hideLoader(context);
-        if (data == null || (data is List && data.isEmpty)) {
-      Fluttertoast.showToast(
-        msg: "Affirmation not available in this category",
-        toastLength: Toast.LENGTH_SHORT,
-        gravity: ToastGravity.BOTTOM,
-      );
-      return;
-    }
+      if (data == null || (data is List && data.isEmpty)) {
+        Fluttertoast.showToast(
+          msg: "Affirmation not available in this category",
+          toastLength: Toast.LENGTH_SHORT,
+          gravity: ToastGravity.BOTTOM,
+        );
+        return;
+      }
       Navigator.pushNamed(
         context,
         AppRoutes.playlistdailts,
@@ -205,6 +208,12 @@ class _HomeScreenState extends State<HomeScreen> {
                   : ListView(
                       padding: const EdgeInsets.all(12),
                       children: [
+                        BannerAdSection(
+                          height:
+                              MediaQuery.of(context).size.width *
+                              (Platform.isIOS ? 0.15 : 0.15),
+                        ),
+                         SizedBox(height: 12),
                         /// 🔹 HEADING
                         const Text(
                           'Last Sessions',

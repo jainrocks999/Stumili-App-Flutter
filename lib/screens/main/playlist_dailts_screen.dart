@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:stumili/ads/ad_manager.dart';
+import 'package:stumili/ads/banner_ad.dart';
 import 'package:stumili/core/helper.dart';
 import 'package:stumili/core/playlist_action_handler.dart';
 import 'package:stumili/core/secure_storage.dart';
@@ -21,7 +23,7 @@ class _PlaylistDailtsScreenState extends State<PlaylistDailtsScreen> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-     if (_loadedOnce) return;
+    if (_loadedOnce) return;
     _loadedOnce = true;
     final args =
         ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
@@ -32,13 +34,15 @@ class _PlaylistDailtsScreenState extends State<PlaylistDailtsScreen> {
     isFavorite = category['is_favorite'] ?? false;
   }
 
-
   void lastSesstionUpdate(dynamic cagteGoriesId) async {
     try {
       final userId = await SecureStore.getUserId();
       final data = {"user_id": userId, "category_id": cagteGoriesId};
-      final resposne=await ApiService.postRequest("/playList/LastSessionUpdate", body: data);
-      final res=resposne.data;
+      final resposne = await ApiService.postRequest(
+        "/playList/LastSessionUpdate",
+        body: data,
+      );
+      final res = resposne.data;
       debugPrint('titititi$res $cagteGoriesId');
     } catch (err) {
       debugPrint("titititi$err");
@@ -129,10 +133,21 @@ class _PlaylistDailtsScreenState extends State<PlaylistDailtsScreen> {
                       height: double.infinity,
                       width: double.infinity,
                       onPress: () {
-                        Navigator.pushNamed(
-                          context,
-                          AppRoutes.player,
-                          arguments: {"affirmations": affirmations},
+                        // Navigator.pushNamed(
+                        //   context,
+                        //   AppRoutes.player,
+                        //   arguments: {"affirmations": affirmations},
+                        // );
+                        AdManager.interstitail.showAd(
+                          onAdDismissed: () {
+                            if (!context.mounted) return;
+
+                            Navigator.pushNamed(
+                              context,
+                              AppRoutes.player,
+                              arguments: {"affirmations": affirmations},
+                            );
+                          },
                         );
                       },
                     ),
@@ -303,6 +318,7 @@ class _PlaylistDailtsScreenState extends State<PlaylistDailtsScreen> {
                 },
               ),
             ),
+            BannerAdSection(height: MediaQuery.of(context).size.width * 0.15),
           ],
         ),
       ),
